@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ShoppingCart, Star } from 'lucide-react';
 import Header from '../components/header';
 import Footer from '../components/footer';
@@ -35,7 +35,7 @@ interface Product {
   subCategory: string;
 }
 
-const ProductCard = ({ product }: { product: Product }) => (
+const ProductCard = React.memo(({ product }: { product: Product }) => (
   <div className="bg-white rounded-lg shadow-md p-4">
     <img src={product.image} alt={product.name} className="w-full h-32 object-cover mb-4 rounded" />
     <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
@@ -57,16 +57,16 @@ const ProductCard = ({ product }: { product: Product }) => (
       Acheter
     </button>
   </div>
-);
+));
 
 const ProductListing = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
 
-  const filteredProducts = products.filter(product => 
+  const filteredProducts = useMemo(() => products.filter(product => 
     (!selectedCategory || product.category === selectedCategory) &&
     (!selectedSubCategory || product.subCategory === selectedSubCategory)
-  );
+  ), [selectedCategory, selectedSubCategory]);
 
   return (
     <div className="w-full p-8 white min-h-screen">
@@ -115,31 +115,30 @@ const ProductListing = () => {
   );
 };
 
-export default function  Produits() {
-  return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="flex-grow">
-        {/* Bannière verte */}
-        <div className="bg-green-900 text-white py-4">
-          <div className="container mx-auto px-4 flex items-center justify-between">
-            <div className="w-1/2">
-              <h1 className="text-4xl font-bold mb-4">Nos Produits</h1>
-            </div>
-            <div className="w-1/3 relative">
-              <Image
-                src="/produits-agricoles.jpg"
-                alt="Produits agricoles"
-                width={500}
-                height={300}
-                className="rounded-lg shadow-lg animate-float"
-              />
-            </div>
+const Produits = () => (
+  <div className="flex flex-col min-h-screen">
+    <Header />
+    <main className="flex-grow">
+      <div className="bg-green-900 text-white py-4">
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          <div className="w-1/2">
+            <h1 className="text-4xl font-bold mb-4">Nos Produits</h1>
+          </div>
+          <div className="w-1/3 relative">
+            <Image
+              src="/produits-agricoles.jpg"
+              alt="Produits agricoles"
+              width={500}
+              height={300}
+              className="rounded-lg shadow-lg animate-float"
+            />
           </div>
         </div>
-        <ProductListing />
-      </main>
-      <Footer />
-    </div>
-  );
-}
+      </div>
+      <ProductListing />
+    </main>
+    <Footer />
+  </div>
+);
+
+export default Produits;
