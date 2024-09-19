@@ -1,0 +1,65 @@
+import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Phone, Truck, Facebook, Linkedin, Instagram, Music, Youtube, Search, User, Menu } from 'lucide-react';
+
+const Header = () => {
+  return (
+    <header className="bg-green-900 text-white">
+      <div className="container mx-auto px-2 sm:px-4">
+        {/* Top bar */}
+        <div className="flex flex-wrap justify-between items-center py-2 text-xs sm:text-sm">
+          <div className="flex items-center mb-2 sm:mb-0">
+            <Phone size={16} className="mr-1 sm:mr-2" />
+            <span className="text-xs sm:text-sm">+221 77 345 34 12</span>
+          </div>
+          <div className="flex items-center mb-2 sm:mb-0">
+            <Truck size={40} className="mr-1 sm:mr-2" />
+            <span className="text-base sm:text-lg font-bold">Livraison 24 h /24</span>
+          </div>
+          <div className="flex items-center space-x-2 sm:space-x-4 mb-2 sm:mb-0">
+            <Facebook size={14} />
+            <Linkedin size={14} />
+            <Instagram size={14} />
+            <Music size={14} />
+            <Youtube size={14} />
+            <div className="flex">
+              <button className="bg-white text-green-700 px-1 sm:px-2 py-1 rounded-l-full text-xs sm:text-sm border border-green-700">FR</button>
+              <button className="bg-green-600 text-white px-1 sm:px-2 py-1 rounded-r-full text-xs sm:text-sm border border-green-600">AN</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main header */}
+      <div className="bg-white text-green-800">
+        <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4 flex flex-wrap justify-between items-center">
+          <Link href="/" className="mb-2 sm:mb-0">
+            <Image src="/logo.png" alt="Yoonu Tool" width={80} height={40} className="w-20 sm:w-24 md:w-28 h-auto" />
+          </Link>
+          <nav className="hidden md:block">
+            <ul className="flex space-x-2 sm:space-x-4 lg:space-x-6 text-xs sm:text-sm">
+              <li><Link href="/" className="hover:text-green-600">ACCUEIL</Link></li>
+              <li><Link href="/qui-sommes-nous" className="hover:text-green-600">QUI SOMMES NOUS ?</Link></li>
+              <li><Link href="/produits" className="hover:text-green-600">PRODUITS</Link></li>
+              <li><Link href="/nos-fermes" className="hover:text-green-600">NOS FERMES</Link></li>
+              <li><Link href="/contact" className="hover:text-green-600">CONTACT</Link></li>
+            </ul>
+          </nav>
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <Search size={18} className="hidden sm:block" />
+            <User size={18} className="hidden sm:block" />
+            <div className="relative hidden sm:block">
+              <div className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs">
+                1
+              </div>
+            </div>
+            <Menu size={24} className="md:hidden" />
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
