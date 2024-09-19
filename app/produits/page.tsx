@@ -59,6 +59,8 @@ const ProductCard = React.memo(({ product }: { product: Product }) => (
   </div>
 ));
 
+ProductCard.displayName = 'ProductCard';
+
 const ProductListing = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
