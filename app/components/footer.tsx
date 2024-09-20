@@ -13,7 +13,7 @@ const Footer = () => {
           <nav>
             <ul className="flex space-x-4">
               <li><Link href="/about" className="hover:underline">À propos</Link></li>
-              <li><Link href="/products" className="hover:underline">Produits</Link></li>
+              <li><Link href="/produits" className="hover:underline">Produits</Link></li>
               <li><Link href="/contact" className="hover:underline">Contact</Link></li>
             </ul>
           </nav>
