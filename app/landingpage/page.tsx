@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, ShoppingCart, Star } from 'lucide-react';
-import { title } from 'process';
 
 const products = [
     { name: 'Betterave', price: 1500, oldPrice: 2000, rating: 4.8, farm: 'Agrobase', image: '/image 18.png' },
@@ -151,14 +150,10 @@ const BanniereAccueil: React.FC = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % categories.length);
   };
 
-  const prevSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + categories.length) % categories.length);
-  };
-
   useEffect(() => {
     const interval = setInterval(nextSlide, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [nextSlide]);
 
   return (
     <div className="relative bg-[#CDEED6] text-white p-8 rounded-lg overflow-hidden h-screen flex items-center bg-[url('/banierre.png')] bg-cover bg-center">
@@ -275,7 +270,7 @@ const JoinPlatformSection: React.FC = () => (
             Rejoignez Notre Plateforme<br />pour Augmenter Vos Ventes !
           </h1>
 
-          <p className="text-4xl text-white font-montserrat font-semibold mb-6 ">Boostez vos revenus en rejoignant notre plateforme qui connecte <span className="font-extrabold">les fermiers aux clients</span>. Vendez facilement vos produits frais, bénéficiez d'un service de livraison fiable et accédez à un marché plus large.</p>
+          <p className="text-4xl text-white font-montserrat font-semibold mb-6 ">Boostez vos revenus en rejoignant notre plateforme qui connecte <span className="font-extrabold">les fermiers aux clients</span>. Vendez facilement vos produits frais, bénéficiez d&apos;un service de livraison fiable et accédez à un marché plus large.</p>
           <div className="text-center">
         </div>
           <div className="mt-8 mb-4">
