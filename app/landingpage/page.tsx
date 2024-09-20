@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ShoppingCart, Star } from 'lucide-react';
 
@@ -61,50 +61,109 @@ const ProductListing = () => (
   </div>
 );
 
-const BanniereAccueil = () => (
-  <div className="relative bg-[#CDEED6] text-white p-8 rounded-lg overflow-hidden h-screen flex items-center bg-[url('/banierre.png')] bg-cover bg-center">
-    <div className="container mx-auto flex justify-between items-center">
-      <div className="w-1/2 relative z-10">
-        <h1 className="text-5xl font-bold mb-4">LA MARKETPLACE DIGITALE</h1>
-        <h2 className="text-2xl mb-8">Vente et Livraison des Produits Agricoles</h2>
-        <div className="flex space-x-6">
-          <button className="bg-yellow-400 text-green-800 px-6 py-3 rounded-full font-semibold text-lg hover:bg-yellow-300 transition-colors">
-            Rejoignez-nous
-          </button>
-          <button className="border-2 border-white px-6 py-3 rounded-full font-semibold text-lg hover:bg-white hover:text-green-800 transition-colors">
-            Voir nos produits
-          </button>
+const BanniereAccueil = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const categories = [
+    {
+      category: "LEGUMES",
+      items: [
+        { src: "/Rectangle 24.png", alt: "Betterave", bg: "bg-red-500", height: "h-32" },
+        { src: "/Rectangle 24.png", alt: "Haricots Verts", bg: "bg-pink-900", height: "h-24" },
+        { src: "/Rectangle 24.png", alt: "Cavolo Nero Kale", bg: "bg-pink-900", height: "h-24" },
+        { src: "/Rectangle 24.png", alt: "Radis", bg: "bg-pink-900", height: "h-32" }
+      ]
+    },
+    {
+      category: "FRUITS",
+      items: [
+        { src: "/Rectangle 25.png", alt: "Pomme", bg: "bg-red-400", height: "h-32" },
+        { src: "/Rectangle 25.png", alt: "Banane", bg: "bg-yellow-400", height: "h-25" },
+        { src: "/Rectangle 25.png", alt: "Orange", bg: "bg-orange-400", height: "h-25" },
+        { src: "/Rectangle 25.png", alt: "Fraise", bg: "bg-red-600", height: "h-32" }
+      ]
+    },
+    {
+      category: "LAITIERE",
+      items: [
+        { src: "/image 18.png", alt: "Pomme", bg: "bg-red-400", height: "h-32" },
+        { src: "/image 18.png", alt: "Banane", bg: "bg-yellow-400", height: "h-25" },
+        { src: "/image 18.png", alt: "Orange", bg: "bg-orange-400", height: "h-25" },
+        { src: "/image 18.png", alt: "Fraise", bg: "bg-red-600", height: "h-32" }
+      ]
+    },
+    // Ajoutez d'autres catégories ici
+  ];
+
+  const nextSlide = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % categories.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + categories.length) % categories.length);
+  };
+
+  useEffect(() => {
+    const interval = setInterval(nextSlide, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="relative bg-[#CDEED6] text-white p-8 rounded-lg overflow-hidden h-screen flex items-center bg-[url('/banierre.png')] bg-cover bg-center">
+      <div className="container mx-auto flex justify-between items-center">
+        <div className="w-2/3 relative z-10">
+          <h1 className="text-5xl font-extrabold mb-4">LA MARKETPLACE DIGITALE</h1>
+
+          <h2 className="text-4xl mb-8">Vente et Livraison des Produits Agricoles</h2>
+          <div className="flex space-x-6">
+            <a className="bg-[#F7B65C] text-white px-8 py-4 rounded-full font-semibold text-xl hover:bg-yellow-300 transition-colors">
+              Rejoignez-nous
+            </a>
+            <a className="border-2 border-[#F7B65C] px-6 py-3 rounded-full font-semibold text-lg hover:bg-white hover:text-green-800 transition-colors">
+              Voir nos produits
+            </a>
+          </div>
         </div>
-      </div>
-      <div className="w-1/3">
-        <div className="bg-white rounded-2xl p-4 shadow-md">
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { src: "/betterave.jpg", alt: "Betterave", bg: "bg-red-500" },
-              { src: "/haricots-verts.jpg", alt: "Haricots Verts", bg: "bg-pink-900" },
-              { src: "/cavolo-nero-kale.jpg", alt: "Cavolo Nero Kale", bg: "bg-pink-900" },
-              { src: "/radis.jpg", alt: "Radis", bg: "bg-pink-900" }
-            ].map((item, index) => (
-              <div key={index} className={`${item.bg} rounded-xl overflow-hidden`}>
-                <Image src={item.src} alt={item.alt} width={100} height={100} layout="responsive" />
+        <div className="w-2/5 h-full">
+          <div className="bg-white rounded-2xl p-6 shadow-lg h-[80vh]">
+            <div className="relative overflow-hidden h-full">
+              <div className="flex transition-transform duration-300 ease-in-out h-full" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
+                {categories.map((category, categoryIndex) => (
+                  <div key={categoryIndex} className="w-full flex-shrink-0 h-full flex flex-col">
+                    <div className="relative flex-grow p-4">
+                      {category.items.map((item, index) => (
+                        <div key={index} className={`${item.bg}  rounded-xl overflow-hidden absolute ${index % 2 === 0 ? 'left-2' : 'right-2'} ${index < 2 ? 'top-2' : 'bottom-2'} ${index % 3 === 0 ? 'w-[47%] h-[55%]' : 'w-[47%] h-[40%]'}`}>
+                          <Image src={item.src} alt={item.alt} layout="fill" objectFit="cover" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-6 text-center">
+                      <h3 className="text-green-950 text-3xl font-bold font-montserrat">{category.category}</h3>
+                      <div className="mt-6 flex justify-center">
+                        <button onClick={prevSlide} className="mx-1 text-green-500 hover:text-green-600 transition-colors">.</button>
+                        <button onClick={prevSlide} className="mx-1 text-green-500 hover:text-green-600 transition-colors">.</button>
+                        <button onClick={prevSlide} className="mx-1 text-green-500 hover:text-green-600 transition-colors">.</button>
+                        <button onClick={prevSlide} className="mx-1 text-green-500 hover:text-green-600 transition-colors">.</button>
+                        <button onClick={nextSlide} className="mx-1 text-green-500 hover:text-green-600 transition-colors">.</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="mt-4 text-center">
-            <h3 className="text-green-950 text-2xl font-bold font-[&apos;Montserrat&apos;]">LEGUMES</h3>
-            <div className="text-green-950/50 text-3xl font-bold font-[&apos;Montserrat&apos;]">. . . . . . . . . .</div>
+              
+            </div>
+            
           </div>
         </div>
       </div>
+      
     </div>
-    <div className="absolute inset-0 bg-green-900 opacity-50"></div>
-  </div>
-);
+  );
+};
 
 const CategorySection = () => (
-  <section className="py-8 px-4 w-full min-h-[15vh] flex items-center">
+  <section className="py-16 px-4 w-full min-h-[15vh] flex items-center">
     <div className="container mx-auto">
-      <div className="text-green-800 text-4xl sm:text-5xl md:text-6xl font-semibold font-[&apos;Montserrat&apos;] leading-tight tracking-widest mb-12 text-center">CATÉGORIES</div>
+      <div className="text-[#08651E] text-4xl sm:text-4xl md:text-6xl font-semibold font-montserrat leading-tight tracking-widest mb-12 text-center">CATÉGORIES</div>
       <div className="w-full">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
@@ -114,9 +173,11 @@ const CategorySection = () => (
             { title: "Céréales", icon: "icons/wheat 1.png" }
           ].map((category, index) => (
             <div key={index} className="w-full h-56 relative p-3">
-              <div className="w-full h-full absolute rounded-3xl border-4 border-green-500" />
-              <div className="absolute left-8 bottom-8 text-green-800 text-xl sm:text-2xl md:text-3xl font-semibold font-[&apos;Montserrat&apos;] leading-tight tracking-tight">{category.title}</div>
-              <img className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 absolute left-1/2 top-1/4 transform -translate-x-1/2 -translate-y-1/2" src={category.icon} alt={category.title} />
+              <div className="w-full h-5/6 absolute rounded-3xl border-2 border-[#10F24C]" />
+              <div className="flex flex-col items-center justify-center h-full">
+                <img className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mb-4" src={category.icon} alt={category.title} />
+                <div className="text-green-800 text-xl sm:text-2xl md:text-3xl font-semibold font-montserrat leading-tight tracking-tight text-center">{category.title}</div>
+              </div>
             </div>
           ))}
         </div>
@@ -127,13 +188,22 @@ const CategorySection = () => (
 
 const BannerSection = () => (
   <section className="relative">
-    <div className="w-full h-64 bg-cover bg-center rounded-lg" style={{ backgroundImage: "url('/baniere1.png')" }}>
-      <div className="absolute inset-0 flex justify-between items-center">
+    <div className="relative mx-auto m-10 w-full h-96 bg-cover bg-center rounded-3xl" style={{ backgroundImage: "url('/baniere1.png')" }}>
+      <div className="absolute inset-0 flex items-center justify-left ">
         <div className="flex flex-col">
-          <div className="text-white text-2xl font-bold ml-4">yonnu Toll</div>
-          <div className="text-white text-2xl font-bold ml-4">Nouveaux produits</div>
+          <div>
+            <h1 className="text-[#F2BB88] text-8xl  text-center animate-fade-in-left font-babylonica">Yoonu Tool</h1>
+          </div>
+          <div>
+            <p className="text-white text-5xl font-bold">
+              NOUVEAUX PRODUITS
+            </p>
+          </div>
         </div>
-        <img className="w-16 h-16 mr-4" src="icons/welcome.png" alt="Bienvenue" />
+      </div>
+
+      <div className="absolute inset-0 flex items-center justify-end ">
+        <img src="/MacBook Air (2022).png" alt="" className="w-2/4 h-auto animate-fade-in-right rounded-lg" />
       </div>
     </div>
     <ProductListing/>
@@ -160,7 +230,7 @@ const JoinPlatformSection = () => (
 const ProductSection = ({ title }: { title: string }) => (
   <section className="py-8 px-4 w-full min-h-[15vh] flex items-center">
     <div className="container mx-auto">
-      <div className="text-green-800 text-4xl sm:text-5xl md:text-6xl font-semibold font-[&apos;Montserrat&apos;] leading-tight tracking-widest mb-12 text-center">{title}</div>
+      <div className="text-green-800 text-4xl sm:text-5xl md:text-6xl font-semibold font-montserrat leading-tight tracking-widest mb-12 text-center">{title}</div>
       <ProductListing/>
     </div>
   </section>

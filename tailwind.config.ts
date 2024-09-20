@@ -12,6 +12,10 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      fontFamily: {
+        babylonica: ['var(--font-babylonica)', 'cursive'],
+        montserrat: ['var(--font-montserrat)', 'sans-serif'],
+      },
     },
   },
   plugins: [],
