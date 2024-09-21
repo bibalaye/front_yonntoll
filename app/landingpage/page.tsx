@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, ShoppingCart, Star } from 'lucide-react';
 
@@ -54,13 +54,13 @@ ProductCard.displayName = 'ProductCard';
 const ProductCarousel: React.FC<{ products: Product[] }> = ({ products }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % products.length);
-  };
+  }, [products.length]);
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex - 1 + products.length) % products.length);
-  };
+  }, [products.length]);
 
   return (
     <div className="relative mx-10 h-[550px] bg-[#CDEED6] p-8 rounded-3xl">
@@ -208,7 +208,7 @@ const BanniereAccueil: React.FC = () => {
   );
 };
 
-const CategorySection: React.FC = () => (
+const CategorySection: React.FC = React.memo(() => (
   <section className="py-16 px-4 w-full min-h-[15vh] flex items-center">
     <div className="container mx-auto">
       <div className="text-[#08651E] text-4xl sm:text-4xl md:text-6xl font-semibold font-montserrat leading-tight tracking-widest mb-12 text-center">CATÉGORIES</div>
@@ -232,9 +232,9 @@ const CategorySection: React.FC = () => (
       </div>
     </div>
   </section>
-);
+));
 
-const BannerSection: React.FC = () => (
+const BannerSection: React.FC = React.memo(() => (
   <section className="relative">
     <div className="relative mx-auto m-10 w-full h-96 bg-cover bg-center rounded-3xl" style={{ backgroundImage: "url('/baniere1.png')" }}>
       <div className="absolute inset-0 flex items-center justify-left ">
@@ -250,14 +250,14 @@ const BannerSection: React.FC = () => (
         </div>
       </div>
       <div className="absolute inset-0 flex items-center justify-end ">
-        <Image src="/MacBook Air (2022).png" alt="MacBook Air" width={500} height={300} className="w-2/4 h-auto animate-fade-in-right rounded-lg" />
+        <Image src="/MacBook Air (2022).png" alt="MacBook Air" width={500} height={300} className="w-2/4 h-auto animate-fade-in-right rounded-lg" loading="lazy" />
       </div>
     </div>
     <ProductCarousel products={products} />
   </section>
-);
+));
 
-const JoinPlatformSection: React.FC = () => (
+const JoinPlatformSection: React.FC = React.memo(() => (
   <section className="w-full ">
     <div className="flex flex-col md:flex-row w-full h-full">
       <div className="w-full md:w-1/2 bg-green-100">
@@ -284,7 +284,7 @@ const JoinPlatformSection: React.FC = () => (
     </div>
 
   </section>
-);
+));
 
 const ProductSection: React.FC<{ title: string }> = ({ title }) => (
   <section className="py-16 px-4 sm:px-6 md:px-8 lg:px-12 w-full min-h-[15vh] mx-auto">

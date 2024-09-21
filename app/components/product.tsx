@@ -28,7 +28,7 @@ export const ProductCard: React.FC<{ product: Product }> = React.memo(({ product
       </div>
       <div className="flex justify-between items-center mb-3">
         <div>
-          <span className="text-xl font-extrabold text-[#08651E]">{product.price} f / Kg</span>
+          <span className="text-lg font-bold text-[#08651E]">{product.price} f / Kg</span>
           <span className="ml-2 text-sm line-through text-[#D9482B]">{product.oldPrice} f / Kg</span>
         </div>
         <span className="text-sm text-[#08651E]">Ferme : {product.farm}</span>
@@ -54,14 +54,21 @@ export const ProductListing: React.FC<{ products: Product[] }> = ({ products }) 
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
+  const { currentProducts: optimizedCurrentProducts, totalPages: optimizedTotalPages } = React.useMemo(() => {
+    return {
+      currentProducts,
+      totalPages
+    };
+  }, [products, currentPage]);
+
   return (
     <div className="relative w-full mx-auto h-auto bg-[#CDEED6] p-8 rounded-3xl">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentProducts.map((product, index) => (
+        {optimizedCurrentProducts.map((product, index) => (
           <ProductCard key={index} product={product} />
         ))}
       </div>
-      {totalPages > 1 && (
+      {optimizedTotalPages > 1 && (
         <div className="flex justify-center mt-10">
           <nav className="inline-flex rounded-md shadow-sm" aria-label="Pagination">
             <button
@@ -71,7 +78,7 @@ export const ProductListing: React.FC<{ products: Product[] }> = ({ products }) 
             >
               Précédent
             </button>
-            {[...Array(totalPages)].map((_, index) => (
+            {[...Array(optimizedTotalPages)].map((_, index) => (
               <button
                 key={index}
                 onClick={() => paginate(index + 1)}
@@ -84,7 +91,7 @@ export const ProductListing: React.FC<{ products: Product[] }> = ({ products }) 
             ))}
             <button
               onClick={() => paginate(currentPage + 1)}
-              disabled={currentPage === totalPages}
+              disabled={currentPage === optimizedTotalPages}
               className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-[#10F24C] font-bold text-sm font-medium text-white hover:bg-[#10F24C] disabled:opacity-50"
             >
               Suivant

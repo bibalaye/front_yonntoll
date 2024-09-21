@@ -3,29 +3,37 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Phone, Truck, Facebook, Linkedin, Instagram, Music, Youtube, Search, User, Menu } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useUser } from '../hooks/useUser';
+import { useRouter } from 'next/navigation';
 
 const Header = () => {
   const [isSticky, setIsSticky] = useState(false);
   const pathname = usePathname();
+  const { isConnected } = useUser();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
-      const threshold = 10; // Seuil de défilement pour activer l'en-tête fixe
-
+      const threshold = 10;
       setIsSticky(scrollPosition > threshold);
     };
 
     window.addEventListener('scroll', handleScroll);
-
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    router.push('/auth/login');
+  };
+
   return (
     <>
-      <div style={{ height: isSticky ? '100px' : '0' }} /> {/* Espace réservé pour éviter le saut */}
+      <div style={{ height: isSticky ? '100px' : '0' }} />
       <header className={`bg-green-900 text-white transition-all duration-300 ${isSticky ? 'fixed top-0 left-0 right-0 z-50 shadow-md' : ''}`}>
         <div className="container mx-auto px-2 sm:px-4">
           {/* Top bar */}
@@ -70,7 +78,23 @@ const Header = () => {
             </nav>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <Search size={18} className="hidden sm:block" />
-              <User size={18} className="hidden sm:block" />
+              {isConnected ? (
+                <>
+                  <User size={18} className="hidden sm:block cursor-pointer" />
+                  <button onClick={handleLogout} className="hidden sm:block text-sm text-[#08651E] hover:text-green-600 ml-2">
+                    Déconnexion
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/register" className="hidden sm:block text-sm text-[#08651E] hover:text-green-600 mr-2">
+                    S'inscrire
+                  </Link>
+                  <Link href="/auth/login" className="hidden sm:block text-sm text-[#08651E] hover:text-green-600">
+                    Se connecter
+                  </Link>
+                </>
+              )}
               <div className="relative hidden sm:block">
                 <div className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs">
                   1
