@@ -13,14 +13,24 @@ const Section = ({ title, content, imageSrc, imageAlt, reverse = false }: {
   imageAlt: string;
   reverse?: boolean;
 }) => (
-  <section className={`py-12`}>
-    <div className={`container mx-auto px-4 flex flex-col ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'} items-center`}>
-      <div className="md:w-1/2 mb-8 md:mb-0 md:px-4">
-        <h2 className="text-4xl font-Montserrat font-bold mb-4">{title}</h2>
-        <p className="text-3xl font-Montserrat tracking-wide leading-relaxed">{content}</p>
-      </div>
-      <div className="md:w-1/2">
-        <Image src={imageSrc} alt={imageAlt} width={500} height={300} layout="responsive"  />
+  <section className="py-8 sm:py-12 lg:py-16">
+    <div className={`container mx-auto px-4 ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'}`}>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12">
+        <div className="w-full md:w-1/2 space-y-6">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-Montserrat font-bold text-[#08651E]">{title}</h2>
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-Montserrat tracking-wide leading-relaxed text-gray-700">{content}</p>
+        </div>
+        <div className="w-full md:w-1/2">
+          <div className="relative w-full aspect-w-4 aspect-h-3 md:aspect-w-16 md:aspect-h-9">
+            <Image 
+              src={imageSrc} 
+              alt={imageAlt} 
+              layout="fill" 
+              objectFit="cover"
+              className="rounded-lg shadow-lg"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </section>

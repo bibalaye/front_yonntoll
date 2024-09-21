@@ -80,33 +80,34 @@ const ProductPage = () => {
           imageFond="/baniere1.png"
           imageAvantPlan="/image_produit.png"
         />
-        <div className="w-full p-8 white min-h-screen">
-          <div className="flex space-x-6">
-            <div className="w-1/4 bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-2xl font-bold text-[#08651E] mb-6 font-montserrat">CATÉGORIES</h2>
-              <ul className="space-y-4">
+        <div className="w-full p-4 sm:p-8 white min-h-screen">
+          <div className="flex flex-col lg:flex-row lg:space-x-6">
+            <div className="w-full lg:w-1/4 bg-white p-4 sm:p-6 rounded-lg shadow-md mb-6 lg:mb-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#08651E] mb-4 sm:mb-6 font-montserrat">CATÉGORIES</h2>
+              <div className="flex flex-wrap -mx-2">
                 {categories.map((category, index) => (
-                  <li key={index} className="mb-4">
+                  <div key={index} className="w-1/2 sm:w-1/3 lg:w-full px-2 mb-4">
                     <button 
-                      className={`text-left w-full font-montserrat text-lg ${selectedCategory === category.name ? 'text-[#08651E] font-bold' : 'text-[#08651E]'} hover:text-[#08651E] transition duration-300`}
+                      className={`text-left w-full font-montserrat text-sm sm:text-base ${selectedCategory === category.name ? 'text-[#08651E] font-bold' : 'text-[#08651E]'} hover:text-[#08651E] transition duration-300`}
                       onClick={() => handleCategoryClick(category.name)}
                     >
-                      {selectedCategory === category.name ? '▼ ' : '▶ '}{category.name}
+                      <span className="inline-block w-4">{selectedCategory === category.name ? '▼' : '▶'}</span>
+                      <span className="align-middle">{category.name}</span>
                     </button>
                     {selectedCategory === category.name && category.subCategories.length > 0 && (
-                      <ul className="ml-6 mt-3 space-y-2">
+                      <ul className="ml-4 mt-2 space-y-1">
                         {category.subCategories.map((subCategory, subIndex) => (
                           <li key={subIndex} className="flex items-center">
                             <input
                               type="checkbox"
-                              id={`subCategory-${subIndex}`}
+                              id={`subCategory-${index}-${subIndex}`}
                               checked={selectedSubCategory === subCategory}
                               onChange={() => handleSubCategoryClick(subCategory)}
                               className="form-checkbox h-4 w-4 text-[#08651E] rounded border-[#08651E] focus:ring-[#08651E]"
                             />
                             <label
-                              htmlFor={`subCategory-${subIndex}`}
-                              className={`ml-2 font-montserrat ${selectedSubCategory === subCategory ? 'text-[#08651E] font-semibold' : 'text-[#08651E]'} hover:text-[#08651E] cursor-pointer transition duration-300`}
+                              htmlFor={`subCategory-${index}-${subIndex}`}
+                              className={`ml-2 font-montserrat text-sm ${selectedSubCategory === subCategory ? 'text-[#08651E] font-semibold' : 'text-[#08651E]'} hover:text-[#08651E] cursor-pointer transition duration-300`}
                             >
                               {subCategory}
                             </label>
@@ -114,36 +115,38 @@ const ProductPage = () => {
                         ))}
                       </ul>
                     )}
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
               
-              <h2 className="text-2xl font-bold text-[#08651E] mt-8 mb-6 font-montserrat">PRIX</h2>
-              <ul className="space-y-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#08651E] mt-6 mb-4 font-montserrat">PRIX</h2>
+              <div className="flex flex-wrap -mx-2">
                 {[
                   { label: 'Moins de 5000 F', value: 'lt5000' },
                   { label: 'Entre 5000 F et 25000 F', value: '5000-25000' },
                   { label: 'Plus de 25000 F', value: 'gt25000' }
                 ].map((priceRange, index) => (
-                  <li key={index} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`priceRange-${index}`}
-                      checked={selectedPriceRange === priceRange.value}
-                      onChange={() => handlePriceRangeClick(priceRange.value)}
-                      className="form-checkbox h-4 w-4 text-[#08651E] rounded border-[#08651E] focus:ring-[#08651E]"
-                    />
-                    <label
-                      htmlFor={`priceRange-${index}`}
-                      className={`ml-2 font-montserrat ${selectedPriceRange === priceRange.value ? 'text-[#08651E] font-semibold' : 'text-[#08651E]'} hover:text-[#08651E] cursor-pointer transition duration-300`}
-                    >
-                      {priceRange.label}
-                    </label>
-                  </li>
+                  <div key={index} className="w-full sm:w-1/2 lg:w-full px-2 mb-3">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`priceRange-${index}`}
+                        checked={selectedPriceRange === priceRange.value}
+                        onChange={() => handlePriceRangeClick(priceRange.value)}
+                        className="form-checkbox h-4 w-4 text-[#08651E] rounded border-[#08651E] focus:ring-[#08651E]"
+                      />
+                      <label
+                        htmlFor={`priceRange-${index}`}
+                        className={`ml-2 font-montserrat text-sm ${selectedPriceRange === priceRange.value ? 'text-[#08651E] font-semibold' : 'text-[#08651E]'} hover:text-[#08651E] cursor-pointer transition duration-300 break-words`}
+                      >
+                        {priceRange.label}
+                      </label>
+                    </div>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
-            <div className="w-3/4">
+            <div className="w-full lg:w-3/4">
               <ProductListing products={filteredProducts} />
             </div>
           </div>

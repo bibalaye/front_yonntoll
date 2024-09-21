@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, ShoppingCart, Star } from 'lucide-react';
+import { div } from 'framer-motion/client';
 
 const products = [
     { name: 'Betterave', price: 1500, oldPrice: 2000, rating: 4.8, farm: 'Agrobase', image: '/image 18.png' },
@@ -23,7 +24,13 @@ interface Product {
 
 const ProductCard: React.FC<{ product: Product }> = React.memo(({ product }) => (
   <div className="max-w-sm bg-white rounded-3xl overflow-hidden shadow-md">
-    <Image src={product.image} alt={product.name} width={400} height={300} className="w-full h-64 object-cover" />
+    <Image 
+      src={product.image} 
+      alt={product.name} 
+      width={400} 
+      height={300} 
+      className="w-full h-auto aspect-[4/3] object-cover sm:h-48 md:h-56 lg:h-64 xl:h-72" 
+    />
     <div className="p-4">
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-2xl font-semibold font-montserrat text-[#08651E]">{product.name}</h2>
@@ -63,34 +70,33 @@ const ProductCarousel: React.FC<{ products: Product[] }> = ({ products }) => {
   }, [products.length]);
 
   return (
-    <div className="relative mx-10 h-[550px] bg-[#CDEED6] p-8 rounded-3xl">
-      <div className="flex justify-center w-full h-full space-x-4  pb-4">
-        {products.slice(currentIndex, currentIndex + 3).map((product, index) => (
-          <div key={index} className="flex-shrink-0 w-1/3 h-auto p-2 mx-6">
-            <ProductCard product={product} />
+    <div className="relative mx-2 sm:mx-4 md:mx-6 lg:mx-10 min-h-[400px] sm:min-h-[450px] md:min-h-[500px] lg:min-h-[550px] bg-[#CDEED6] p-4 sm:p-6 md:p-8 rounded-3xl">
+      <div className="flex flex-col sm:flex-row justify-center items-center w-full h-full space-y-4 sm:space-y-0 sm:space-x-2 md:space-x-4 pb-4">
+        {products.slice(currentIndex, currentIndex + (window.innerWidth < 640 ? 1 : window.innerWidth < 1024 ? 2 : 3)).map((product, index) => (
+          <div key={index} className="w-full xs:w-3/4 sm:w-1/2 lg:w-1/3 h-auto p-2 mx-auto">
+            <div className="transform transition-all duration-300 hover:scale-105">
+              <ProductCard product={product} />
+            </div>
           </div>
-
-
-
         ))}
       </div>
       <button 
-        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md"
+        className="absolute left-1 sm:left-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-1 sm:p-2 shadow-md"
         onClick={prevSlide}
         aria-label="Produit précédent"
       >
-        <ChevronLeft className="w-6 h-6 text-gray-600" />
+        <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6 text-gray-600" />
       </button>
       <button 
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-md"
+        className="absolute right-1 sm:right-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-1 sm:p-2 shadow-md"
         onClick={nextSlide}
         aria-label="Produit suivant"
       >
-        <ChevronRight className="w-6 h-6 text-gray-600" />
+        <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6 text-gray-600" />
       </button>
       <div className="flex justify-center mt-4">
         {products.map((_, i) => (
-          <div key={i} className={`w-2 h-2 rounded-full mx-1 ${i === currentIndex ? 'bg-green-600' : 'bg-gray-300'}`} />
+          <div key={i} className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mx-0.5 sm:mx-1 ${i === currentIndex ? 'bg-green-600' : 'bg-gray-300'}`} />
         ))}
       </div>
     </div>
@@ -156,41 +162,45 @@ const BanniereAccueil: React.FC = () => {
   }, [nextSlide]);
 
   return (
-    <div className="relative bg-[#CDEED6] text-white p-8 rounded-lg overflow-hidden h-screen flex items-center bg-[url('/banierre.png')] bg-cover bg-center">
-      <div className="container mx-auto flex justify-between items-center">
-        <div className="w-2/3 relative z-10">
-          <h1 className="text-5xl font-extrabold mb-4">LA MARKETPLACE DIGITALE</h1>
-          <h2 className="text-4xl mb-8">Vente et Livraison des Produits Agricoles</h2>
-          <div className="flex space-x-6">
-            <a className="bg-[#F7B65C] text-white px-8 py-4 rounded-full font-semibold text-xl hover:bg-yellow-300 transition-colors">
+    <div className="relative bg-[#CDEED6] text-white p-4 sm:p-6 md:p-8 rounded-lg overflow-hidden min-h-screen flex items-center bg-[url('/banierre.png')] bg-cover bg-center">
+      <div className="container mx-auto flex flex-col lg:flex-row justify-between items-center">
+        <div className="w-full lg:w-1/2 relative z-10 mb-8 lg:mb-0 p-4 flex flex-col justify-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold mb-4 sm:mb-6 leading-tight">
+            LA MARKETPLACE DIGITALE
+          </h1>
+          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl mb-6 sm:mb-8 leading-snug">
+            Vente et Livraison des Produits Agricoles
+          </h2>
+          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 md:space-x-6">
+            <a className="bg-[#F7B65C] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-lg sm:text-xl lg:text-2xl hover:bg-yellow-500 transition-colors duration-300 text-center w-full sm:w-auto shadow-lg">
               Rejoignez-nous
             </a>
-            <a className="border-2 border-[#F7B65C] px-6 py-3 rounded-full font-semibold text-lg hover:bg-white hover:text-green-800 transition-colors">
+            <a className="border-2 border-[#F7B65C] px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-lg sm:text-xl lg:text-2xl hover:bg-[#F7B65C] hover:text-white transition-colors duration-300 text-center w-full sm:w-auto shadow-lg">
               Voir nos produits
             </a>
           </div>
         </div>
-        <div className="w-2/5 h-full">
-          <div className="bg-white rounded-2xl p-6 shadow-lg h-[80vh]">
+        <div className="w-full lg:w-2/5 h-full">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg h-[60vh] sm:h-[70vh] md:h-[80vh]">
             <div className="relative overflow-hidden h-full">
               <div className="flex transition-transform duration-300 ease-in-out h-full" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
                 {categories.map((category, categoryIndex) => (
                   <div key={categoryIndex} className="w-full flex-shrink-0 h-full flex flex-col">
-                    <div className="relative flex-grow p-4">
+                    <div className="relative flex-grow p-2 sm:p-4">
                       {category.items.map((item, index) => (
-                        <div key={index} className={`${item.bg} rounded-xl overflow-hidden absolute ${index % 2 === 0 ? 'left-2' : 'right-2'} ${index < 2 ? 'top-2' : 'bottom-2'} ${index % 3 === 0 ? 'w-[47%] h-[55%]' : 'w-[47%] h-[40%]'}`}>
+                        <div key={index} className={`${item.bg} rounded-xl overflow-hidden absolute ${index % 2 === 0 ? 'left-1 sm:left-2' : 'right-1 sm:right-2'} ${index < 2 ? 'top-1 sm:top-2' : 'bottom-1 sm:bottom-2'} ${index % 3 === 0 ? 'w-[45%] h-[50%] sm:w-[47%] sm:h-[55%]' : 'w-[45%] h-[35%] sm:w-[47%] sm:h-[40%]'}`}>
                           <Image src={item.src} alt={item.alt} layout="fill" objectFit="cover" />
                         </div>
                       ))}
                     </div>
-                    <div className="mt-6 text-center">
-                      <h3 className="text-green-950 text-3xl font-bold font-montserrat">{category.category}</h3>
-                      <div className="mt-6 flex justify-center">
+                    <div className="mt-4 sm:mt-6 text-center">
+                      <h3 className="text-green-950 text-xl sm:text-2xl md:text-3xl font-bold font-montserrat">{category.category}</h3>
+                      <div className="mt-4 sm:mt-6 flex justify-center">
                         {categories.map((_, index) => (
                           <button 
                             key={index}
                             onClick={() => setCurrentIndex(index)} 
-                            className={`mx-1 text-green-500 hover:text-green-600 transition-colors ${index === currentIndex ? 'font-bold' : ''}`}
+                            className={`mx-0.5 sm:mx-1 text-green-500 hover:text-green-600 transition-colors ${index === currentIndex ? 'font-bold' : ''}`}
                           >
                             .
                           </button>
@@ -210,21 +220,20 @@ const BanniereAccueil: React.FC = () => {
 
 const CategorySection: React.FC = React.memo(() => (
   <section className="py-16 px-4 w-full min-h-[15vh] flex items-center">
-    <div className="container mx-auto">
-      <div className="text-[#08651E] text-4xl sm:text-4xl md:text-6xl font-semibold font-montserrat leading-tight tracking-widest mb-12 text-center">CATÉGORIES</div>
+    <div className="container mx-auto px-4">
+      <div className="text-[#08651E] text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold font-montserrat leading-tight tracking-widest mb-12 text-center">CATÉGORIES</div>
       <div className="w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex space-x-4 overflow-x-auto">
           {[
             { title: "Fruits et légumes", icon: "/icons/healthy-food 1.png" },
             { title: "Viandes et Poissons", icon: "/icons/fish 1.png" },
             { title: "Laitière et Œufs", icon: "/icons/Group 57.png" },
-            { title: "Céréales", icon: "/icons/wheat 1.png" }
+           { title: "Céréales", icon: "/icons/wheat 1.png" }
           ].map((category, index) => (
-            <div key={index} className="w-full h-56 relative p-3">
-              <div className="w-full h-5/6 absolute rounded-3xl border-2 border-[#10F24C]" />
-              <div className="flex flex-col items-center justify-center h-full">
-                <Image className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mb-4" src={category.icon} alt={category.title} width={96} height={96} />
-                <div className="text-green-800 text-xl sm:text-2xl md:text-3xl font-semibold font-montserrat leading-tight tracking-tight text-center">{category.title}</div>
+            <div key={index} className="flex-shrink-0 w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 xl:w-64 xl:h-64 relative p-1 sm:p-2 md:p-3">
+              <div className="w-full h-80% absolute rounded-2xl border-2 border-[#10F24C] flex flex-col items-center justify-center p-1 sm:p-2 md:p-3 bg-white shadow-lg">
+                <Image className="w-10 h-10 sm:w-14 sm:h-14 md:w-18 md:h-18 lg:w-20 lg:h-20 xl:w-22 xl:h-22 mb-1 sm:mb-2 md:mb-3" src={category.icon} alt={category.title} width={88} height={88} />
+                <div className="text-green-800 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl font-semibold font-montserrat leading-tight tracking-tight text-center">{category.title}</div>
               </div>
             </div>
           ))}
@@ -236,21 +245,21 @@ const CategorySection: React.FC = React.memo(() => (
 
 const BannerSection: React.FC = React.memo(() => (
   <section className="relative">
-    <div className="relative mx-auto m-10 w-full h-96 bg-cover bg-center rounded-3xl" style={{ backgroundImage: "url('/baniere1.png')" }}>
-      <div className="absolute inset-0 flex items-center justify-left ">
-        <div className="flex flex-col">
+    <div className="relative mx-auto my-10 w-full h-64 sm:h-80 md:h-96 lg:h-[30rem] bg-cover bg-center rounded-3xl" style={{ backgroundImage: "url('/baniere1.png')" }}>
+      <div className="absolute inset-0 flex items-center justify-start px-2 sm:px-4 md:px-6 lg:px-8 xl:px-10">
+        <div className="flex flex-col items-start space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-5">
           <div>
-            <h1 className="text-[#F2BB88] text-8xl text-center animate-fade-in-left font-babylonica">Yoonu Tool</h1>
+            <h1 className="text-[#F2BB88] text-5xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl text-center animate-fade-in-left font-babylonica">Yoonu Tool</h1>
           </div>
           <div>
-            <p className="text-white text-5xl font-bold">
+            <p className="text-white text-lg sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold">
               NOUVEAUX PRODUITS
             </p>
           </div>
         </div>
       </div>
-      <div className="absolute inset-0 flex items-center justify-end ">
-        <Image src="/MacBook Air (2022).png" alt="MacBook Air" width={500} height={300} className="w-2/4 h-auto animate-fade-in-right rounded-lg" loading="lazy" />
+      <div className="absolute inset-0 flex items-center justify-end px-2 sm:px-4 md:px-6 lg:px-8 xl:px-10">
+        <Image src="/MacBook Air (2022).png" alt="MacBook Air" width={500} height={300} className="w-2/3 sm:w-2/3 md:w-2/3 lg:w-2/4 xl:w-3/5 h-auto animate-fade-in-right rounded-lg" loading="lazy" />
       </div>
     </div>
     <ProductCarousel products={products} />
@@ -259,26 +268,32 @@ const BannerSection: React.FC = React.memo(() => (
 
 const JoinPlatformSection: React.FC = React.memo(() => (
   <section className="w-full ">
-    <div className="flex flex-col md:flex-row w-full h-full">
-      <div className="w-full md:w-1/2 bg-green-100">
-
-        <Image src="/image 25.png" alt="Image d'exemple" className="w-full h-full object-cover" width={800} height={600} />
+    <div className="flex flex-col lg:flex-row w-full min-h-screen">
+      <div className="w-full lg:w-1/2 bg-green-100">
+        <Image 
+          src="/image 25.png" 
+          alt="Image d'exemple" 
+          className="w-full h-full object-cover" 
+          width={800} 
+          height={600} 
+          layout="responsive"
+        />
       </div>
-      <div className="w-full md:w-1/2 bg-[#F7B65C] p-8">
-        <div className="py-8 m-4">
-          <h1 className="text-5xl w-full font-montserrat font-extrabold text-white mb-6 ">
-            Rejoignez Notre Plateforme<br />pour Augmenter Vos Ventes !
+      <div className="w-full lg:w-1/2 bg-[#F7B65C] p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-center">
+        <div className="py-4 sm:py-6 md:py-8 max-w-xl mx-auto">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-montserrat font-extrabold text-white mb-4 sm:mb-6 leading-tight">
+            Rejoignez Notre Plateforme pour Augmenter Vos Ventes !
           </h1>
 
-          <p className="text-4xl text-white font-montserrat font-semibold mb-6 ">Boostez vos revenus en rejoignant notre plateforme qui connecte <span className="font-extrabold">les fermiers aux clients</span>. Vendez facilement vos produits frais, bénéficiez d&apos;un service de livraison fiable et accédez à un marché plus large.</p>
-          <div className="text-center">
-        </div>
-          <div className="mt-8 mb-4">
-            <a href="#" className="inline-block px-6 py-3 bg-[#14A536] text-white text-2xl font-montserrat font-bold rounded-3xl w-64 h-auto hover:bg-[#118F2E] transition-colors">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-white font-montserrat font-semibold mb-4 sm:mb-6 leading-relaxed">
+            Boostez vos revenus en rejoignant notre plateforme qui connecte <span className="font-extrabold">les fermiers aux clients</span>. Vendez facilement vos produits frais, bénéficiez d&apos;un service de livraison fiable et accédez à un marché plus large.
+          </p>
+
+          <div className="mt-4 sm:mt-6 md:mt-8">
+            <a href="#" className="block w-full sm:inline-block sm:w-auto px-4 sm:px-6 py-3 bg-[#14A536] text-white text-base sm:text-lg md:text-xl font-montserrat font-bold rounded-3xl hover:bg-[#118F2E] transition-colors text-center">
               Rejoignez-nous
             </a>
           </div>
-
         </div>
       </div>
     </div>
