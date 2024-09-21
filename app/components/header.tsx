@@ -102,7 +102,7 @@ const Header = () => {
                 ) : (
                   <div className="hidden md:flex items-center space-x-2">
                     <Link href="/auth/register" className="text-sm text-[#08651E] hover:text-green-600">
-                      S'inscrire
+                      S&apos;inscrire
                     </Link>
                     <Link href="/auth/login" className="text-sm text-[#08651E] hover:text-green-600">
                       Se connecter
@@ -137,7 +137,7 @@ const Header = () => {
                     {!isConnected && (
                       <div className="flex items-center space-x-4">
                         <Link href="/auth/register" className="text-sm font-medium text-[#08651E] hover:text-green-600">
-                          S'inscrire
+                          S&apos;inscrire
                         </Link>
                         <Link href="/auth/login" className="text-sm font-medium bg-[#08651E] text-white px-4 py-2 rounded-full hover:bg-green-700 transition-colors">
                           Se connecter

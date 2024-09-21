@@ -58,8 +58,27 @@ const ProductCard: React.FC<{ product: Product }> = React.memo(({ product }) => 
 
 ProductCard.displayName = 'ProductCard';
 
+function useWindowWidth() {
+  const [windowWidth, setWindowWidth] = useState(0);
+  
+  useEffect(() => {
+    function handleResize() {
+      setWindowWidth(window.innerWidth);
+    }
+    
+    if (typeof window !== 'undefined') {
+      setWindowWidth(window.innerWidth);
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+
+  return windowWidth;
+}
+
 const ProductCarousel: React.FC<{ products: Product[] }> = ({ products }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const windowWidth = useWindowWidth();
 
   const nextSlide = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % products.length);
@@ -72,7 +91,7 @@ const ProductCarousel: React.FC<{ products: Product[] }> = ({ products }) => {
   return (
     <div className="relative mx-2 sm:mx-4 md:mx-6 lg:mx-10 min-h-[400px] sm:min-h-[450px] md:min-h-[500px] lg:min-h-[550px] bg-[#CDEED6] p-4 sm:p-6 md:p-8 rounded-3xl">
       <div className="flex flex-col sm:flex-row justify-center items-center w-full h-full space-y-4 sm:space-y-0 sm:space-x-2 md:space-x-4 pb-4">
-        {products.slice(currentIndex, currentIndex + (window.innerWidth < 640 ? 1 : window.innerWidth < 1024 ? 2 : 3)).map((product, index) => (
+        {products.slice(currentIndex, currentIndex + (windowWidth < 640 ? 1 : windowWidth < 1024 ? 2 : 3)).map((product, index) => (
           <div key={index} className="w-full xs:w-3/4 sm:w-1/2 lg:w-1/3 h-auto p-2 mx-auto">
             <div className="transform transition-all duration-300 hover:scale-105">
               <ProductCard product={product} />
@@ -152,14 +171,14 @@ const BanniereAccueil: React.FC = () => {
     },
   ], []);
 
-  const nextSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % categories.length);
-  };
-
   useEffect(() => {
+    const nextSlide = () => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % categories.length);
+    };
+
     const interval = setInterval(nextSlide, 5000);
     return () => clearInterval(interval);
-  }, [nextSlide]);
+  }, [categories.length]);
 
   return (
     <div className="relative bg-[#CDEED6] text-white p-4 sm:p-6 md:p-8 rounded-lg overflow-hidden min-h-screen flex items-center bg-[url('/banierre.png')] bg-cover bg-center">
@@ -242,6 +261,7 @@ const CategorySection: React.FC = React.memo(() => (
     </div>
   </section>
 ));
+CategorySection.displayName = 'CategorySection';
 
 const BannerSection: React.FC = React.memo(() => (
   <section className="relative">
@@ -265,17 +285,18 @@ const BannerSection: React.FC = React.memo(() => (
     <ProductCarousel products={products} />
   </section>
 ));
+BannerSection.displayName = 'BannerSection';
 
 const JoinPlatformSection: React.FC = React.memo(() => (
   <section className="w-full ">
     <div className="flex flex-col lg:flex-row w-full min-h-screen">
-      <div className="w-full lg:w-1/2 bg-green-100">
+      <div className="w-full  lg:w-1/2 bg-green-100">
         <Image 
           src="/image 25.png" 
           alt="Image d'exemple" 
           className="w-full h-full object-cover" 
           width={800} 
-          height={600} 
+          height={1200} 
           layout="responsive"
         />
       </div>
@@ -300,6 +321,7 @@ const JoinPlatformSection: React.FC = React.memo(() => (
 
   </section>
 ));
+JoinPlatformSection.displayName = 'JoinPlatformSection';
 
 const ProductSection: React.FC<{ title: string }> = ({ title }) => (
   <section className="py-16 px-4 sm:px-6 md:px-8 lg:px-12 w-full min-h-[15vh] mx-auto">

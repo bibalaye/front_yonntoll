@@ -101,7 +101,7 @@ export const ProductListing: React.FC<{ products: Product[] }> = ({ products }) 
           </nav>
         </div>
       )}
-    {typeof window !== 'undefined' && !window.location.pathname.includes('/produits') && (
+    {typeof window !== "undefined" && !window.location.pathname.includes("/produits") && (
       <div className="flex justify-center mt-6 sm:mt-8 md:mt-10">
         <a href="/produits" className="hover:bg-green-100 text-[#08651E] font-Montserrat font-extrabold py-2 sm:py-3 px-4 sm:px-6 rounded-3xl border-2 border-[#10F24C] text-lg sm:text-xl md:text-2xl inline-block">
           Voir plus
