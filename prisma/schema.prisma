@@ -1,0 +1,396 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int            @id @default(autoincrement())
+  userType         UserType?
+  email            String         @unique
+  firstName        String?
+  lastName         String?
+  phoneNumber      String?
+  clerkId          String?        @unique
+  imageUrl         String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  notifications    Notification[]
+  agripreneur      Agripreneur?
+  orders           Order[]
+  reviews          Review[]
+  deliveries       Delivery[]
+  sentMessages     Message[]      @relation("SentMessages")
+  receivedMessages Message[]      @relation("ReceivedMessages")
+  cart             Cart?
+  wishlistItems    WishlistItem[]
+  paymentMethods   PaymentMethod[]
+  returns          Return[]
+  addresses        Address[]
+}
+
+enum UserType {
+  AGRIPRENEUR
+  CLIENT
+  ADMIN
+  DELIVERY
+}
+
+model Agripreneur {
+  id            Int       @id @default(autoincrement())
+  user          User      @relation(fields: [userId], references: [id])
+  userId        Int       @unique
+  farmName      String
+  description   String?   @db.Text
+  averageRating Decimal?  @db.Decimal(3, 2)
+  accountName   String?
+  accountNumber String?
+  bankName      String?
+  products      Product[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  reviews       Review[]
+}
+
+model Product {
+  id             Int                @id @default(autoincrement())
+  agripreneur    Agripreneur        @relation(fields: [agripreneurId], references: [id])
+  agripreneurId  Int
+  name           String
+  description    String?            @db.Text
+  category       Category           @relation(fields: [categoryId], references: [id])
+  categoryId     Int
+  price          Decimal            @db.Decimal(10, 2)
+  unit           String?
+  stock          Int
+  isOrganic      Boolean            @default(false)
+  harvestDate    DateTime?
+  expiryDate     DateTime?
+  averageRating  Decimal?           @db.Decimal(3, 2)
+  orderItems     OrderItem[]
+  reviews        Review[]
+  images         ProductImage[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  stockMovements StockMovement[]
+  promotions     ProductPromotion[]
+  wishlistItems  WishlistItem[]
+  tags           ProductTag[]
+  cartItems      CartItem[]
+  subCategory    SubCategory        @relation(fields: [subCategoryId], references: [id])
+  subCategoryId  Int
+
+  @@index([agripreneurId, stock])
+}
+
+model Category {
+  id            Int           @id @default(autoincrement())
+  name          String        @unique
+  imageUrl      String?
+  products      Product[]
+  subCategories SubCategory[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model SubCategory {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique
+  category   Category  @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  products   Product[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model ProductImage {
+  id        Int      @id @default(autoincrement())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id                Int           @id @default(autoincrement())
+  client            User          @relation(fields: [clientId], references: [id])
+  clientId          Int
+  items             OrderItem[]
+  totalAmount       Decimal       @db.Decimal(10, 2)
+  status            OrderStatus   @default(PENDING)
+  paymentStatus     PaymentStatus @default(PENDING)
+  paymentMethod     String?
+  deliveryAddress   Address?      @relation(fields: [deliveryAddressId], references: [id])
+  deliveryAddressId Int?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  delivery          Delivery?
+  transaction       Transaction?
+  return            Return?
+
+  @@index([status, createdAt])
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   Int
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Delivery {
+  id                   Int            @id @default(autoincrement())
+  order                Order          @relation(fields: [orderId], references: [id])
+  orderId              Int            @unique
+  deliveryPerson       User           @relation(fields: [deliveryPersonId], references: [id])
+  deliveryPersonId     Int
+  status               DeliveryStatus @default(PENDING)
+  startTime            DateTime?
+  endTime              DateTime?
+  currentLatitude      Decimal?       @db.Decimal(10, 8)
+  currentLongitude     Decimal?       @db.Decimal(11, 8)
+  estimatedArrivalTime DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+}
+
+enum DeliveryStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+model Review {
+  id            Int          @id @default(autoincrement())
+  user          User         @relation(fields: [userId], references: [id])
+  userId        Int
+  product       Product?     @relation(fields: [productId], references: [id])
+  productId     Int?
+  agripreneur   Agripreneur? @relation(fields: [agripreneurId], references: [id])
+  agripreneurId Int?
+  rating        Int          @db.TinyInt
+  comment       String?      @db.Text
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([userId, productId, agripreneurId])
+}
+
+model Transaction {
+  id            Int               @id @default(autoincrement())
+  order         Order             @relation(fields: [orderId], references: [id])
+  orderId       Int               @unique
+  amount        Decimal           @db.Decimal(10, 2)
+  status        TransactionStatus @default(PENDING)
+  paymentMethod String?
+  transactionId String?           @unique
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  refundStatus  RefundStatus      @default(NOT_REFUNDED)
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum RefundStatus {
+  NOT_REFUNDED
+  PARTIALLY_REFUNDED
+  FULLY_REFUNDED
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  type      String
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, isRead])
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  senderId   Int
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  receiverId Int
+  content    String   @db.Text
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([senderId, receiverId])
+}
+
+model LandingPageStats {
+  id             Int      @id @default(autoincrement())
+  date           DateTime @unique
+  visitors       Int      @default(0)
+  signups        Int      @default(0)
+  conversionRate Decimal? @db.Decimal(5, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model StockMovement {
+  id        Int      @id @default(autoincrement())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int
+  reason    String
+  createdAt DateTime @default(now())
+}
+
+model Promotion {
+  id             Int                @id @default(autoincrement())
+  name           String
+  description    String?
+  discountType   DiscountType
+  discountValue  Decimal            @db.Decimal(5, 2)
+  startDate      DateTime
+  endDate        DateTime
+  products       ProductPromotion[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  maximumUsage   Int?
+  usageCount     Int                @default(0)
+  isActive       Boolean            @default(true)
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+model Tag {
+  id       Int          @id @default(autoincrement())
+  name     String       @unique
+  products ProductTag[]
+}
+
+model Return {
+  id        Int          @id @default(autoincrement())
+  order     Order        @relation(fields: [orderId], references: [id])
+  orderId   Int          @unique
+  reason    String
+  status    ReturnStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  client    User         @relation(fields: [clientId], references: [id])
+  clientId  Int
+}
+
+enum ReturnStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model WishlistItem {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Cart {
+  id        Int       @id @default(autoincrement())
+  user      User      @relation(fields: [userId], references: [id])
+  userId    Int       @unique
+  items     CartItem[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  cartId    Int
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+}
+
+model Address {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  street     String
+  city       String
+  state      String?
+  postalCode String
+  country    String
+  isDefault  Boolean  @default(false)
+  orders     Order[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model PaymentMethod {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  type      String
+  details   Json
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductPromotion {
+  id          Int       @id @default(autoincrement())
+  product     Product   @relation(fields: [productId], references: [id])
+  productId   Int
+  promotion   Promotion @relation(fields: [promotionId], references: [id])
+  promotionId Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model ProductTag {
+  id        Int      @id @default(autoincrement())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  tag       Tag      @relation(fields: [tagId], references: [id])
+  tagId     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

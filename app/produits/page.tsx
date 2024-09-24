@@ -1,77 +1,97 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/header';
 import Footer from '../components/footer';
 import Baniere from '../components/baniere';
 import { ProductListing, Product } from '../components/product';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const products: Product[] = [
-  { name: 'Betterave', price: 1500, oldPrice: 2000, rating: 4.8, farm: 'Agrobase', image: '/image 18.png', category: 'Fruits et légumes', subCategory: 'Légume' },
-  { name: 'Chou rouge', price: 2000, oldPrice: 2000, rating: 4.0, farm: 'Agrobase', image: '/image 18.png', category: 'Fruits et légumes', subCategory: 'Légume' },
-  { name: 'Courge', price: 1000, oldPrice: 2000, rating: 4.0, farm: 'Diamba', image: '/image 18.png', category: 'Fruits et légumes', subCategory: 'Légume' },
-  { name: 'Pomme', price: 1200, oldPrice: 1500, rating: 4.5, farm: 'Agrobase', image: '/image 18.png', category: 'Fruits et légumes', subCategory: 'Fruits' },
-  { name: 'Laitue', price: 800, oldPrice: 1000, rating: 4.2, farm: 'Diamba', image: '/image 18.png', category: 'Fruits et légumes', subCategory: 'Salade' },
-  { name: 'Tomate', price: 1800, oldPrice: 2200, rating: 4.6, farm: 'Agrobase', image: '/image 18.png', category: 'Fruits et légumes', subCategory: 'Légume' },
-  { name: 'Carotte', price: 900, oldPrice: 1100, rating: 4.3, farm: 'Diamba', image: '/image 18.png', category: 'Fruits et légumes', subCategory: 'Légume' },
-  { name: 'Banane', price: 1300, oldPrice: 1600, rating: 4.7, farm: 'Agrobase', image: '/image 18.png', category: 'Fruits et légumes', subCategory: 'Fruits' },
-  { name: 'Épinard', price: 700, oldPrice: 900, rating: 4.1, farm: 'Diamba', image: '/image 18.png', category: 'Fruits et légumes', subCategory: 'Salade' },
-  { name: 'Bœuf', price: 5500, oldPrice: 6000, rating: 4.9, farm: 'Ferme du Sahel', image: '/image 18.png', category: 'Viande', subCategory: 'Bœuf' },
-  { name: 'Poulet', price: 3500, oldPrice: 4000, rating: 4.4, farm: 'Volaille Express', image: '/image 18.png', category: 'Viande', subCategory: 'Volaille' },
-  { name: 'Thon', price: 4500, oldPrice: 5000, rating: 4.6, farm: 'Pêcherie Maritime', image: '/image 18.png', category: 'Poisson', subCategory: 'Poisson de mer' },
-  { name: 'Tilapia', price: 3000, oldPrice: 3500, rating: 4.2, farm: 'Aquaculture du Delta', image: '/image 18.png', category: 'Poisson', subCategory: "Poisson d'eau douce" },
-  { name: 'Lait frais', price: 1000, oldPrice: 1200, rating: 4.7, farm: 'Laiterie du Ferlo', image: '/image 18.png', category: 'Lait', subCategory: 'Lait frais' },
-  { name: 'Fromage local', price: 2500, oldPrice: 3000, rating: 4.5, farm: 'Laiterie du Ferlo', image: '/image 18.png', category: 'Lait', subCategory: 'Fromage' },
-  { name: 'Panier de légumes assortis', price: 5000, oldPrice: 5500, rating: 4.8, farm: 'Agrobase', image: '/image 18.png', category: 'Fruits et légumes', subCategory: 'Panier de légumes' },
-  { name: 'Panier de fruits exotiques', price: 7000, oldPrice: 7500, rating: 4.9, farm: 'Diamba', image: '/image 18.png', category: 'Fruits et légumes', subCategory: 'Panier fruits' },
-  { name: 'Agneau', price: 15000, oldPrice: 16000, rating: 4.7, farm: 'Ferme du Sahel', image: '/image 18.png', category: 'Viande', subCategory: 'Agneau' },
-  { name: 'Saumon', price: 12000, oldPrice: 13000, rating: 4.8, farm: 'Pêcherie Maritime', image: '/image 18.png', category: 'Poisson', subCategory: 'Poisson de mer' },
-  { name: 'Yaourt artisanal', price: 500, oldPrice: 600, rating: 4.3, farm: 'Laiterie du Ferlo', image: '/image 18.png', category: 'Lait', subCategory: 'Yaourt' },
-  { name: 'Truffe noire', price: 50000, oldPrice: 55000, rating: 5.0, farm: 'Délices Rares', image: '/image 18.png', category: 'Fruits et légumes', subCategory: 'Champignon' },
-];
+interface ProductListingProps {
+  products: Product[];
+}
 
-const categories = [
-  {
-    name: 'Fruits et légumes',
-    subCategories: ['Légume', 'Fruits', 'Salade', 'Herbe', 'Panier de légumes', 'Panier fruits']
-  },
-  { name: 'Viande', subCategories: [] },
-  { name: 'Poisson', subCategories: [] },
-  { name: 'Lait', subCategories: [] }
-];
+interface Category {
+  id: number;
+  name: string;
+  subCategories: SubCategory[];
+}
+
+interface SubCategory {
+  id: number;
+  name: string;
+}
 
 const ProductPage = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [selectedPriceRange, setSelectedPriceRange] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(product => 
-      (!selectedCategory || product.category === selectedCategory) &&
-      (!selectedSubCategory || product.subCategory === selectedSubCategory) &&
-      (!selectedPriceRange || (
-        (selectedPriceRange === 'lt5000' && product.price < 5000) ||
-        (selectedPriceRange === '5000-25000' && product.price >= 5000 && product.price <= 25000) ||
-        (selectedPriceRange === 'gt25000' && product.price > 25000)
-      ))
-    );
-  }, [selectedCategory, selectedSubCategory, selectedPriceRange]);
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, [currentPage, selectedCategory, selectedPriceRange]);
 
-  const handleCategoryClick = (categoryName: string) => {
-    setSelectedCategory(prevCategory => prevCategory === categoryName ? '' : categoryName);
-    setSelectedSubCategory('');
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(`/api/products?page=${currentPage}&limit=10&category=${selectedCategory}&priceRange=${selectedPriceRange}`);
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des produits');
+      }
+      const data = await response.json();
+      setProducts(data.products);
+      setTotalPages(data.totalPages);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des produits:", error);
+      toast.error("Erreur lors de la récupération des produits");
+    }
   };
 
-  const handleSubCategoryClick = (subCategory: string) => {
-    setSelectedSubCategory(prevSubCategory => prevSubCategory === subCategory ? '' : subCategory);
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories');
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des catégories');
+      }
+      const data = await response.json();
+      const categoriesWithSubCategories = await Promise.all(data.map(async (category: Category) => {
+        const subCategoriesResponse = await fetch(`/api/categories/${category.id}/subcategories`);
+        const subCategories = await subCategoriesResponse.json();
+        return { ...category, subCategories };
+      }));
+      setCategories(categoriesWithSubCategories);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des catégories:", error);
+      toast.error("Erreur lors de la récupération des catégories");
+    }
+  };
+
+  const handleCategoryClick = (categoryId: number) => {
+    setExpandedCategories(prev => 
+      prev.includes(categoryId) 
+        ? prev.filter(id => id !== categoryId) 
+        : [...prev, categoryId]
+    );
+  };
+
+  const handleSubCategoryClick = (subCategoryName: string) => {
+    setSelectedCategory(prevCategory => prevCategory === subCategoryName ? '' : subCategoryName);
+    setCurrentPage(1);
   };
 
   const handlePriceRangeClick = (priceRange: string) => {
     setSelectedPriceRange(prevPriceRange => prevPriceRange === priceRange ? '' : priceRange);
+    setCurrentPage(1);
   };
 
   return (
     <div className="flex flex-col min-h-screen">
+      <ToastContainer />
       <Header />
       <main className="flex-grow">
         <Baniere 
@@ -85,35 +105,31 @@ const ProductPage = () => {
             <div className="w-full lg:w-1/4 bg-white p-4 sm:p-6 rounded-lg shadow-md mb-6 lg:mb-0">
               <h2 className="text-xl sm:text-2xl font-bold text-[#08651E] mb-4 sm:mb-6 font-montserrat">CATÉGORIES</h2>
               <div className="flex flex-wrap -mx-2">
-                {categories.map((category, index) => (
-                  <div key={index} className="w-1/2 sm:w-1/3 lg:w-full px-2 mb-4">
+                {categories.map((category) => (
+                  <div key={category.id} className="w-full px-2 mb-4">
                     <button 
-                      className={`text-left w-full font-montserrat text-sm sm:text-base ${selectedCategory === category.name ? 'text-[#08651E] font-bold' : 'text-[#08651E]'} hover:text-[#08651E] transition duration-300`}
-                      onClick={() => handleCategoryClick(category.name)}
+                      className={`text-left w-full font-montserrat text-sm sm:text-base text-[#08651E] hover:text-[#08651E] transition duration-300`}
+                      onClick={() => handleCategoryClick(category.id)}
                     >
-                      <span className="inline-block w-4">{selectedCategory === category.name ? '▼' : '▶'}</span>
+                      <span className="inline-block w-4">{expandedCategories.includes(category.id) ? '▼' : '▶'}</span>
                       <span className="align-middle">{category.name}</span>
                     </button>
-                    {selectedCategory === category.name && category.subCategories.length > 0 && (
-                      <ul className="ml-4 mt-2 space-y-1">
-                        {category.subCategories.map((subCategory, subIndex) => (
-                          <li key={subIndex} className="flex items-center">
-                            <input
-                              type="checkbox"
-                              id={`subCategory-${index}-${subIndex}`}
-                              checked={selectedSubCategory === subCategory}
-                              onChange={() => handleSubCategoryClick(subCategory)}
-                              className="form-checkbox h-4 w-4 text-[#08651E] rounded border-[#08651E] focus:ring-[#08651E]"
-                            />
-                            <label
-                              htmlFor={`subCategory-${index}-${subIndex}`}
-                              className={`ml-2 font-montserrat text-sm ${selectedSubCategory === subCategory ? 'text-[#08651E] font-semibold' : 'text-[#08651E]'} hover:text-[#08651E] cursor-pointer transition duration-300`}
+                    {expandedCategories.includes(category.id) && (
+                      <div className="ml-4 mt-2">
+                        {category.subCategories && category.subCategories.length > 0 ? (
+                          category.subCategories.map((subCategory) => (
+                            <button
+                              key={subCategory.id}
+                              className={`block w-full text-left font-montserrat text-sm ${selectedCategory === subCategory.name ? 'text-[#08651E] font-bold' : 'text-gray-600'} hover:text-[#08651E] transition duration-300 mb-1`}
+                              onClick={() => handleSubCategoryClick(subCategory.name)}
                             >
-                              {subCategory}
-                            </label>
-                          </li>
-                        ))}
-                      </ul>
+                              {subCategory.name}
+                            </button>
+                          ))
+                        ) : (
+                          <p className="text-sm text-gray-500">Aucune sous-catégorie disponible</p>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}
@@ -147,7 +163,19 @@ const ProductPage = () => {
               </div>
             </div>
             <div className="w-full lg:w-3/4">
-              <ProductListing products={filteredProducts} />
+              <ProductListing products={products} />
+              {/* Pagination */}
+              <div className="mt-4 flex justify-center">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`mx-1 px-3 py-1 rounded ${currentPage === page ? 'bg-[#08651E] text-white' : 'bg-gray-200'}`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

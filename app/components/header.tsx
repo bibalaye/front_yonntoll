@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Phone, Truck, Facebook, Linkedin, Instagram, Music,ShoppingCart, Youtube, Search, User, Menu, X } from 'lucide-react';
+import { Phone, Truck, Facebook, Linkedin, Instagram, Music, ShoppingCart, Youtube, Search, User, Menu, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { useUser } from '../hooks/useUser';
 import { useRouter } from 'next/navigation';
 import { header } from 'framer-motion/client';
+import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 
 const Header = () => {
   const [isSticky, setIsSticky] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { isConnected } = useUser();
   const router = useRouter();
 
   useEffect(() => {
@@ -92,23 +91,16 @@ const Header = () => {
                     </div>
                   </div>
                 </div>
-                {isConnected ? (
-                  <div className="flex items-center space-x-2">
-                    <User size={18} className="cursor-pointer" />
-                    <button onClick={handleLogout} className="text-sm text-[#08651E] hover:text-green-600">
-                      Déconnexion
-                    </button>
-                  </div>
-                ) : (
-                  <div className="hidden md:flex items-center space-x-2">
-                    <Link href="/auth/register" className="text-sm text-[#08651E] hover:text-green-600">
-                      S&apos;inscrire
-                    </Link>
-                    <Link href="/auth/login" className="text-sm text-[#08651E] hover:text-green-600">
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <button className="text-sm text-[#08651E] hover:text-green-600">
                       Se connecter
-                    </Link>
-                  </div>
-                )}
+                    </button>
+                  </SignInButton>
+                </SignedOut>
+                <SignedIn>
+                  <UserButton afterSignOutUrl="/" />
+                </SignedIn>
                 <button onClick={toggleMenu} className="lg:hidden">
                   {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
@@ -134,28 +126,23 @@ const Header = () => {
                         </div>
                       </div>
                     </div>
-                    {!isConnected && (
-                      <div className="flex items-center space-x-4">
-                        <Link href="/auth/register" className="text-sm font-medium text-[#08651E] hover:text-green-600">
-                          S&apos;inscrire
-                        </Link>
-                        <Link href="/auth/login" className="text-sm font-medium bg-[#08651E] text-white px-4 py-2 rounded-full hover:bg-green-700 transition-colors">
+                    <SignedOut>
+                      <SignInButton mode="modal">
+                        <button className="text-sm font-medium bg-[#08651E] text-white px-4 py-2 rounded-full hover:bg-green-700 transition-colors">
                           Se connecter
-                        </Link>
-                      </div>
-                    )}
+                        </button>
+                      </SignInButton>
+                    </SignedOut>
                   </div>
-                  {isConnected && (
+                  <SignedIn>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <User size={20} className="text-[#08651E]" />
                         <span className="text-sm font-medium text-[#08651E]">Mon compte</span>
                       </div>
-                      <button onClick={handleLogout} className="text-sm font-medium text-red-500 hover:text-red-600">
-                        Déconnexion
-                      </button>
+                      <UserButton afterSignOutUrl="/" />
                     </div>
-                  )}
+                  </SignedIn>
                 </div>
               </nav>
             )}
