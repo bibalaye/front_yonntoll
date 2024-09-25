@@ -1,18 +1,20 @@
 import React from 'react';
 import Image from 'next/image';
+import { CldImage } from 'next-cloudinary';
 
 const JoinPlatformSection: React.FC = React.memo(() => (
   <section className="w-full ">
     <div className="flex flex-col lg:flex-row w-full min-h-screen">
       <div className="w-full  lg:w-1/2 bg-green-100">
-        <Image 
-          src="/image 25.png" 
-          alt="Image d'exemple" 
-          className="w-full h-full object-cover" 
-          width={800} 
-          height={1200} 
-          layout="responsive"
-        />
+      <CldImage
+          src="YOONUTOLL IMAGE/umhemheesoyla7aoo1jr" // Use this sample image or upload your own via the Media Explorer
+          width="800" // Transform the image: auto-crop to square aspect_ratio
+          height="800"
+          crop={{
+            type: 'auto',
+            source: true
+          }} alt={'image'}    />
+        
       </div>
       <div className="w-full lg:w-1/2 bg-[#F7B65C] p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-center">
         <div className="py-4 sm:py-6 md:py-8 max-w-xl mx-auto">

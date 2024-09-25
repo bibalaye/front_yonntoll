@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import ProductCarousel from './ProductCarousel';
 import { Product } from '@prisma/client';
+import { CldImage } from 'next-cloudinary';
 
 const BannerSection: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -39,8 +40,17 @@ const BannerSection: React.FC = () => {
           </div>
         </div>
         <div className="absolute inset-0 flex items-center justify-end px-2 sm:px-4 md:px-6 lg:px-8 xl:px-10">
-          <Image src="/MacBook Air (2022).png" alt="MacBook Air" width={500} height={300} className="w-2/3 sm:w-2/3 md:w-2/3 lg:w-2/4 xl:w-3/5 h-auto animate-fade-in-right rounded-lg" loading="lazy" />
-        </div>
+        <CldImage
+          src="YOONUTOLL IMAGE/fbwlrpxekg7g8drkxwsl" // Use this sample image or upload your own via the Media Explorer
+          width="800" // Transform the image: auto-crop to square aspect_ratio
+          height="600"
+          crop={{
+            type: 'auto',
+            source: true
+          }} 
+          alt={'MacBook Air'}
+          className="w-2/3 sm:w-2/3 md:w-2/3 lg:w-2/4 xl:w-3/5 h-auto animate-fade-in-right rounded-lg"
+        /></div>
       </div>
       <ProductCarousel products={products} />
     </section>

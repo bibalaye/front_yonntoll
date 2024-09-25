@@ -9,6 +9,7 @@ interface Product {
   rating: number;
   farm: string;
   image: string;
+  
 }
 
 function useWindowWidth() {

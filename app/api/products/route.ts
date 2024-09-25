@@ -4,11 +4,19 @@ import { prisma } from '@/app/lib/prisma';
 // Gère les requêtes GET pour récupérer tous les produits
 export async function GET() {
   try {
-    const products = await prisma.product.findMany();
+    const products = await prisma.product.findMany({
+      include: {
+        images: true,
+        agripreneur: true,
+        category: true,
+        subCategory: true,
+      },
+    });
+
     return NextResponse.json(products);
   } catch (error) {
-    console.error('Error fetching products:', error);
-    return NextResponse.json({ error: 'Error fetching products' }, { status: 500 });
+    console.error('Erreur lors de la récupération des produits:', error);
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }
 

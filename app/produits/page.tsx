@@ -4,13 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Header from '../components/header';
 import Footer from '../components/footer';
 import Baniere from '../components/baniere';
-import { ProductListing, Product } from '../components/product';
+import ProductListing from '../components/ProductListing';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-interface ProductListingProps {
-  products: Product[];
-}
 
 interface Category {
   id: number;
@@ -24,7 +20,6 @@ interface SubCategory {
 }
 
 const ProductPage = () => {
-  const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedPriceRange, setSelectedPriceRange] = useState('');
@@ -33,24 +28,8 @@ const ProductPage = () => {
   const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
 
   useEffect(() => {
-    fetchProducts();
     fetchCategories();
   }, [currentPage, selectedCategory, selectedPriceRange]);
-
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch(`/api/products?page=${currentPage}&limit=10&category=${selectedCategory}&priceRange=${selectedPriceRange}`);
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des produits');
-      }
-      const data = await response.json();
-      setProducts(data.products);
-      setTotalPages(data.totalPages);
-    } catch (error) {
-      console.error("Erreur lors de la récupération des produits:", error);
-      toast.error("Erreur lors de la récupération des produits");
-    }
-  };
 
   const fetchCategories = async () => {
     try {
@@ -163,19 +142,7 @@ const ProductPage = () => {
               </div>
             </div>
             <div className="w-full lg:w-3/4">
-              <ProductListing products={products} />
-              {/* Pagination */}
-              <div className="mt-4 flex justify-center">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`mx-1 px-3 py-1 rounded ${currentPage === page ? 'bg-[#08651E] text-white' : 'bg-gray-200'}`}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </div>
+              <ProductListing />
             </div>
           </div>
         </div>

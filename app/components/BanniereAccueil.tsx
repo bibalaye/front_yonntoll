@@ -8,32 +8,59 @@ const BanniereAccueil: React.FC = () => {
   const [categories, setCategories] = useState<{ category: string; items: { src: string; alt: string; bg: string; height: string; }[]; }[]>([]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchProducts = async () => {
       try {
-        const response = await fetch('/api/categories');
+        const response = await fetch('/api/products');
         if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des catégories');
+          throw new Error('Erreur lors de la récupération des produits');
         }
-        const data = await response.json();
+        const products = await response.json();
         
-        // Transformer les données reçues pour correspondre à la structure attendue
-        const formattedCategories = data.map((category: { name: string }) => ({
-          category: category.name.toUpperCase(),
-          items: [
-            { src: "/Rectangle 24.png", alt: "Image 1", bg: "bg-red-500", height: "h-32" },
-            { src: "/Rectangle 24.png", alt: "Image 2", bg: "bg-pink-900", height: "h-24" },
-            { src: "/Rectangle 24.png", alt: "Image 3", bg: "bg-pink-900", height: "h-24" },
-            { src: "/Rectangle 24.png", alt: "Image 4", bg: "bg-pink-900", height: "h-32" }
-          ]
-        }));
+        // Regrouper les produits par catégorie
+        const productsByCategory = products.reduce((acc: { [x: string]: any[]; }, product: { category: { name: string; }; }) => {
+          const categoryName = product.category.name.toUpperCase();
+          if (!acc[categoryName]) {
+            acc[categoryName] = [];
+          }
+          acc[categoryName].push(product);
+          return acc;
+        }, {});
+
+        // Formater les données pour l'affichage
+        const formattedCategories = Object.entries(productsByCategory).map(([categoryName, categoryProducts]) => {
+          const productImages = (categoryProducts as any[])
+            .filter((product: any) => product.images && product.images.length > 0)
+            .map((product: any) => ({
+              src: product.images[0].imageUrl,
+              alt: product.name,
+              bg: "bg-pink-900",
+              height: "h-32"
+            }))
+            .slice(0, 4);
+
+          // Compléter avec des images par défaut si nécessaire
+          while (productImages.length < 4) {
+            productImages.push({
+              src: "/Rectangle 24.png",
+              alt: "Image par défaut",
+              bg: "bg-red-500",
+              height: "h-32"
+            });
+          }
+
+          return {
+            category: categoryName,
+            items: productImages
+          };
+        });
 
         setCategories(formattedCategories);
       } catch (error) {
-        console.error("Erreur lors de la récupération des catégories:", error);
+        console.error("Erreur lors de la récupération des produits:", error);
       }
     };
 
-    fetchCategories();
+    fetchProducts();
   }, []);
 
   useEffect(() => {

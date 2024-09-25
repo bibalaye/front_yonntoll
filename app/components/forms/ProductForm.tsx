@@ -20,7 +20,7 @@ interface ProductFormInputs {
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 const ProductForm: React.FC = () => {
-  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<ProductFormInputs>({
+  const { register, handleSubmit, control, watch, formState: { errors }, reset } = useForm<ProductFormInputs>({
     resolver: zodResolver(ProductSchema),
   });
 
@@ -34,6 +34,8 @@ const ProductForm: React.FC = () => {
   );
 
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
+  const [productId, setProductId] = useState<number | null>(null);
 
   React.useEffect(() => {
     if (categoriesError) toast.error('Erreur lors de la récupération des catégories');
@@ -53,7 +55,11 @@ const ProductForm: React.FC = () => {
       });
 
       if (response.ok) {
+        const result = await response.json();
+        setProductId(result.id);
         toast.success('Produit ajouté avec succès');
+        setStep(2);
+        reset();
       } else {
         const errorData = await response.json();
         toast.error(`Erreur lors de l'ajout du produit: ${errorData.error}`);
@@ -64,6 +70,53 @@ const ProductForm: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!productId) {
+      toast.error('Erreur: ID du produit non disponible');
+      return;
+    }
+
+    const files = event.target.files;
+    if (!files) return;
+
+    setLoading(true);
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('images', files[i]);
+    }
+    formData.append('productId', productId.toString());
+
+    try {
+      const response = await fetch('/api/products/images', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        toast.success('Images ajoutées avec succès');
+        setStep(1);
+        setProductId(null);
+      } else {
+        const errorData = await response.json();
+        toast.error(`Erreur lors de l'ajout des images: ${errorData.error}`);
+      }
+    } catch (error) {
+      toast.error('Erreur réseau lors de l\'ajout des images');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === 2) {
+    return (
+      <div>
+        <h2>Ajouter des images pour le produit</h2>
+        <input type="file" multiple onChange={handleImageUpload} />
+        {loading && <ClipLoader size={20} color="#4F46E5" />}
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

@@ -4,7 +4,12 @@ import { prisma } from '@/app/lib/prisma';
 // Gère les requêtes GET pour récupérer tous les utilisateurs
 export async function GET() {
   try {
-    const agripreneurs = await prisma.agripreneur.findMany();
+    const agripreneurs = await prisma.agripreneur.findMany({
+      include: {
+        user: true,
+        products: true,
+      },
+    });
     return NextResponse.json(agripreneurs);
   } catch (error) {
     console.error('Error fetching agripreneur:', error);
