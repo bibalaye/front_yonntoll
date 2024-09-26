@@ -1,16 +1,21 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { FaEdit, FaTrashAlt, FaPlus, FaSearch, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { FaEdit, FaTrashAlt, FaPlus, FaSearch, FaChevronDown, FaChevronUp, FaPen, FaTimes, FaCheck } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { getSubCategoriesByCategoryId } from '@/app/lib/actions';
 import CategoryForm from './forms/CategoryForm';
 
 interface Category {
-  subCategories: any[];
+  subCategories: SubCategory[];
   id: number;
   name: string;
   imageUrl?: string;
   description?: string;
+}
+
+interface SubCategory {
+  id: number;
+  name: string;
+  categoryId: number;
 }
 
 const CategoryList: React.FC = () => {
@@ -22,55 +27,60 @@ const CategoryList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [accordionOpen, setAccordionOpen] = useState<number | null>(null);
   const [showSubCategoryForm, setShowSubCategoryForm] = useState<number | null>(null);
+  const [newImage, setNewImage] = useState<File | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
+  const [editingSubCategory, setEditingSubCategory] = useState<SubCategory | null>(null);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch('/api/categories');
-        if (!response.ok) {
-          throw new Error('Échec de la récupération des catégories');
-        }
-        const data = await response.json();
-        setCategories(data);
-      } catch (error) {
-        setError("Une erreur s'est produite lors de la récupération des catégories");
-        toast.error("Une erreur s'est produite lors de la récupération des catégories");
-      } finally {
-        setLoading(false);
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await fetch('/api/categories');
+      if (!response.ok) {
+        throw new Error('Échec de la récupération des catégories');
       }
-    };
-
-    fetchCategories();
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      setError("Une erreur s'est produite lors de la récupération des catégories");
+      toast.error("Une erreur s'est produite lors de la récupération des catégories");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  const handleSearch = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
-  };
+  }, []);
 
-  const handleEditClick = (category: Category) => {
+  const handleEditClick = useCallback((category: Category) => {
     setEditingCategory(category);
-    setShowCategoryForm(true);
-  };
+    setNewImage(null);
+  }, []);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (editingCategory) {
       try {
+        const formData = new FormData();
+        formData.append('name', editingCategory.name);
+        if (newImage) {
+          formData.append('image', newImage);
+        }
+
         const response = await fetch(`/api/categories/${editingCategory.id}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(editingCategory),
+          body: formData,
         });
 
         if (response.ok) {
-          const updatedCategory = await response.json();
-          setCategories(categories.map(category => (category.id === updatedCategory.id ? updatedCategory : category)));
+          const savedCategory = await response.json();
+          setCategories(prevCategories => prevCategories.map(category => (category.id === savedCategory.id ? savedCategory : category)));
           setEditingCategory(null);
-          setShowCategoryForm(false);
+          setNewImage(null);
           toast.success("Catégorie mise à jour avec succès");
         } else {
-          console.error('Erreur lors de la mise à jour de la catégorie');
           toast.error("Erreur lors de la mise à jour de la catégorie");
         }
       } catch (error) {
@@ -78,7 +88,40 @@ const CategoryList: React.FC = () => {
         toast.error("Erreur lors de la mise à jour de la catégorie");
       }
     }
-  };
+  }, [editingCategory, newImage]);
+
+  const handleDeleteClick = useCallback((category: Category) => {
+    setDeletingCategory(category);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (deletingCategory) {
+      try {
+        const response = await fetch(`/api/categories/${deletingCategory.id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          setCategories(prevCategories => prevCategories.filter(category => category.id !== deletingCategory.id));
+          toast.success("Catégorie supprimée avec succès");
+        } else {
+          const errorData = await response.json();
+          toast.error(errorData.error === 'La catégorie contient des produits' 
+            ? "Impossible de supprimer la catégorie car elle contient des produits"
+            : "Erreur lors de la suppression de la catégorie");
+        }
+      } catch (error) {
+        console.error('Erreur lors de la suppression de la catégorie:', error);
+        toast.error("Erreur lors de la suppression de la catégorie");
+      } finally {
+        setDeletingCategory(null);
+      }
+    }
+  }, [deletingCategory]);
+
+  const cancelDelete = useCallback(() => {
+    setDeletingCategory(null);
+  }, []);
 
   const fetchSubCategories = useCallback(async (categoryId: number) => {
     try {
@@ -87,39 +130,29 @@ const CategoryList: React.FC = () => {
         throw new Error('Échec de la récupération des sous-catégories');
       }
       const data = await response.json();
+      setCategories(prevCategories => prevCategories.map(category => 
+        category.id === categoryId ? { ...category, subCategories: data } : category
+      ));
       if (Array.isArray(data) && data.length === 0) {
         toast.info("Aucune sous-catégorie trouvée pour cette catégorie");
-        setCategories(categories => categories.map(category => 
-          category.id === categoryId ? { ...category, subCategories: [] } : category
-        ));
-      } else {
-        setCategories(categories => categories.map(category => 
-          category.id === categoryId ? { ...category, subCategories: data } : category
-        ));
       }
     } catch (error) {
       console.error("Erreur lors de la récupération des sous-catégories:", error);
-      if (error instanceof Error && error.message === 'Échec de la récupération des sous-catégories') {
-        toast.info("Aucune sous-catégorie trouvée pour cette catégorie");
-      } else {
-        toast.error("Une erreur inattendue s'est produite lors de la récupération des sous-catégories");
-      }
-      setCategories(categories => categories.map(category => 
+      toast.error("Une erreur s'est produite lors de la récupération des sous-catégories");
+      setCategories(prevCategories => prevCategories.map(category => 
         category.id === categoryId ? { ...category, subCategories: [] } : category
       ));
     }
   }, []);
 
-  const filteredCategories = categories.filter(category =>
+  const filteredCategories = useMemo(() => categories.filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     category.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ), [categories, searchTerm]);
 
   const toggleAccordion = useCallback(async (id: number) => {
-    if (accordionOpen === id) {
-      setAccordionOpen(null);
-    } else {
-      setAccordionOpen(id);
+    setAccordionOpen(prevId => prevId === id ? null : id);
+    if (accordionOpen !== id) {
       await fetchSubCategories(id);
     }
   }, [accordionOpen, fetchSubCategories]);
@@ -128,7 +161,56 @@ const CategoryList: React.FC = () => {
     setShowSubCategoryForm(id);
   }, []);
 
-  const SubCategoryForm = ({ categoryId }: { categoryId: number }) => {
+  const handleEditSubCategory = useCallback((subCategory: SubCategory) => {
+    setEditingSubCategory(subCategory);
+  }, []);
+
+  const handleSaveSubCategory = useCallback(async (subCategory: SubCategory) => {
+    try {
+      const response = await fetch(`/api/subcategories/${subCategory.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(subCategory),
+      });
+
+      if (response.ok) {
+        toast.success('Sous-catégorie mise à jour avec succès');
+        await fetchSubCategories(subCategory.categoryId);
+        setEditingSubCategory(null);
+      } else {
+        const errorData = await response.json();
+        toast.error(`Erreur lors de la mise à jour de la sous-catégorie: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la sous-catégorie:', error);
+      toast.error('Une erreur est survenue lors de la mise à jour de la sous-catégorie');
+    }
+  }, [fetchSubCategories]);
+
+  const handleDeleteSubCategory = useCallback(async (subCategory: SubCategory) => {
+    try {
+      const response = await fetch(`/api/subcategories/${subCategory.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast.success('Sous-catégorie supprimée avec succès');
+        await fetchSubCategories(subCategory.categoryId);
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error === 'La sous-catégorie contient des produits'
+          ? "Impossible de supprimer la sous-catégorie car elle contient des produits"
+          : `Erreur lors de la suppression de la sous-catégorie: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la sous-catégorie:', error);
+      toast.error('Une erreur est survenue lors de la suppression de la sous-catégorie');
+    }
+  }, [fetchSubCategories]);
+
+  const SubCategoryForm = useCallback(({ categoryId }: { categoryId: number }) => {
     const [name, setName] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -181,7 +263,7 @@ const CategoryList: React.FC = () => {
         </div>
       </form>
     );
-  };
+  }, [fetchSubCategories]);
 
   if (loading) {
     return (
@@ -223,17 +305,6 @@ const CategoryList: React.FC = () => {
             <FaPlus className="mr-2" /> Ajouter Catégorie
           </button>
         </div>
-        {showCategoryForm && (
-          <div className="mb-6 bg-white shadow-md rounded-lg p-6">
-            <CategoryForm />
-            <button
-              onClick={() => setShowCategoryForm(false)}
-              className="mt-4 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
-            >
-              Annuler
-            </button>
-          </div>
-        )}
         <div className="bg-white shadow overflow-hidden sm:rounded-lg">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -257,7 +328,7 @@ const CategoryList: React.FC = () => {
                       <button onClick={() => handleEditClick(category)} className="text-indigo-600 hover:text-indigo-900 mr-4">
                         <FaEdit className="inline-block mr-1" /> Modifier
                       </button>
-                      <button className="text-red-600 hover:text-red-900 mr-4">
+                      <button onClick={() => handleDeleteClick(category)} className="text-red-600 hover:text-red-900 mr-4">
                         <FaTrashAlt className="inline-block mr-1" /> Supprimer
                       </button>
                       <button onClick={() => toggleAccordion(category.id)} className="text-gray-600 hover:text-gray-900">
@@ -268,27 +339,60 @@ const CategoryList: React.FC = () => {
                   {accordionOpen === category.id && (
                     <tr>
                       <td colSpan={3} className="px-6 py-4 bg-gray-50">
-                        <h3 className="text-lg font-semibold mb-2">Sous-catégories de {category.name}</h3>
-                        <ul className="mb-4 space-y-2">
-                          {category.subCategories && category.subCategories.length > 0 ? (
-                            category.subCategories.map((subCategory) => (
-                              <li key={subCategory.id} className="text-sm text-gray-700">
-                                {subCategory.name}
-                              </li>
-                            ))
-                          ) : (
-                            <li className="text-sm text-gray-500">Aucune sous-catégorie disponible</li>
+                        <div className="border-l-4 border-green-500 pl-4">
+                          <h3 className="text-lg font-semibold mb-4">Sous-catégories de {category.name}</h3>
+                          <ul className="mb-4 space-y-2">
+                            {category.subCategories && category.subCategories.length > 0 ? (
+                              category.subCategories.map((subCategory) => (
+                                <li key={subCategory.id} className="flex items-center justify-between bg-white p-2 rounded-md shadow-sm">
+                                  {editingSubCategory && editingSubCategory.id === subCategory.id ? (
+                                    <input
+                                      type="text"
+                                      value={editingSubCategory.name}
+                                      onChange={(e) => setEditingSubCategory({ ...editingSubCategory, name: e.target.value })}
+                                      className="flex-grow mr-2 p-1 border border-gray-300 rounded-md"
+                                    />
+                                  ) : (
+                                    <span className="text-sm text-gray-700">{subCategory.name}</span>
+                                  )}
+                                  <div>
+                                    {editingSubCategory && editingSubCategory.id === subCategory.id ? (
+                                      <>
+                                        <button onClick={() => handleSaveSubCategory(editingSubCategory)} className="text-green-600 hover:text-green-800 mr-2">
+                                          <FaCheck className="inline-block" />
+                                        </button>
+                                        <button onClick={() => setEditingSubCategory(null)} className="text-gray-600 hover:text-gray-800">
+                                          <FaTimes className="inline-block" />
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <button onClick={() => handleEditSubCategory(subCategory)} className="text-blue-600 hover:text-blue-800 mr-2">
+                                          <FaPen className="inline-block" />
+                                        </button>
+                                        <button onClick={() => handleDeleteSubCategory(subCategory)} className="text-red-600 hover:text-red-800">
+                                          <FaTrashAlt className="inline-block" />
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                </li>
+                              ))
+                            ) : (
+                              <li className="text-sm text-gray-500">Aucune sous-catégorie disponible</li>
+                            )}
+                          </ul>
+                          <button
+                            onClick={() => handleAddSubCategory(category.id)}
+                            className="p-2 bg-green-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                            aria-label="Ajouter Sous-catégorie"
+                          >
+                            <FaPlus />
+                          </button>
+                          {showSubCategoryForm === category.id && (
+                            <SubCategoryForm categoryId={category.id} />
                           )}
-                        </ul>
-                        <button
-                          onClick={() => handleAddSubCategory(category.id)}
-                          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                        >
-                          Ajouter Sous-catégorie
-                        </button>
-                        {showSubCategoryForm === category.id && (
-                          <SubCategoryForm categoryId={category.id} />
-                        )}
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -298,6 +402,22 @@ const CategoryList: React.FC = () => {
           </table>
         </div>
       </div>
+      {showCategoryForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="category-form-modal">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Ajouter une catégorie</h3>
+              <CategoryForm />
+              <button
+                onClick={() => setShowCategoryForm(false)}
+                className="mt-4 w-full px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {editingCategory && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -312,11 +432,10 @@ const CategoryList: React.FC = () => {
                   placeholder="Nom de la catégorie"
                 />
                 <input
-                  type="text"
-                  value={editingCategory.imageUrl || ''}
-                  onChange={(e) => setEditingCategory({ ...editingCategory, imageUrl: e.target.value })}
+                  type="file"
+                  onChange={(e) => setNewImage(e.target.files ? e.target.files[0] : null)}
                   className="mt-4 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="URL de l'image"
+                  accept="image/*"
                 />
               </div>
               <div className="items-center px-4 py-3">
@@ -327,8 +446,39 @@ const CategoryList: React.FC = () => {
                   Enregistrer
                 </button>
                 <button
-                  onClick={() => setEditingCategory(null)}
+                  onClick={() => {
+                    setEditingCategory(null);
+                    setNewImage(null);
+                  }}
                   className="mt-3 px-4 py-2 bg-gray-300 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {deletingCategory && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="delete-modal">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">Confirmer la suppression</h3>
+              <div className="mt-2 px-7 py-3">
+                <p className="text-sm text-gray-500">
+                  Êtes-vous sûr de vouloir supprimer la catégorie "{deletingCategory.name}" ?
+                </p>
+              </div>
+              <div className="items-center px-4 py-3">
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 mb-2"
+                >
+                  Confirmer la suppression
+                </button>
+                <button
+                  onClick={cancelDelete}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
                 >
                   Annuler
                 </button>

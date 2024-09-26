@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { FaEdit, FaTrashAlt, FaPlus, FaSearch, FaTimes } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -14,8 +14,8 @@ interface Product {
   id: string;
   name: string;
   description: string;
-  category: { name: string };
-  subCategory: { name: string };
+  category: { name: string } | null;
+  subCategory: { name: string } | null;
   price: number;
   stock: number;
   agripreneur: {
@@ -34,48 +34,57 @@ const ProductList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch('/api/products');
-        if (!response.ok) {
-          throw new Error('Échec de la récupération des produits');
-        }
-        const productsData = await response.json();
-        setProducts(productsData);
-      } catch (error) {
-        setError("Une erreur s'est produite lors de la récupération des produits");
-        toast.error("Une erreur s'est produite lors de la récupération des produits");
-      } finally {
-        setLoading(false);
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/products');
+      if (!response.ok) {
+        throw new Error('Échec de la récupération des produits');
       }
-    };
-
-    fetchProducts();
+      const productsData = await response.json();
+      setProducts(productsData);
+    } catch (error) {
+      setError("Une erreur s'est produite lors de la récupération des produits");
+      toast.error("Une erreur s'est produite lors de la récupération des produits", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  const handleSearch = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
-  };
+  }, []);
 
-  const handleEditClick = (product: Product) => {
-    setEditingProduct(product);
-  };
-
-  const handleProductClick = (product: Product) => {
+  const handleProductClick = useCallback((product: Product) => {
     setSelectedProduct(product);
-  };
+    setEditingProduct(product);
+  }, []);
 
-  const handleCloseProductDetails = () => {
+  const handleCloseProductDetails = useCallback(() => {
     setSelectedProduct(null);
     setEditingProduct(null);
-  };
+  }, []);
 
-  const handleQuickEdit = async (field: string, value: string | number) => {
+  const handleQuickEdit = useCallback(async (field: string, value: string | number) => {
     if (selectedProduct) {
+      setIsProcessing(true);
       try {
-        const updatedProduct = { ...selectedProduct, [field]: value };
+        const updatedProduct = { ...selectedProduct, [field]: typeof value === 'number' ? value : isNaN(Number(value)) ? value : Number(value) };
         const response = await fetch(`/api/products/${selectedProduct.id}`, {
           method: 'PUT',
           headers: {
@@ -86,21 +95,40 @@ const ProductList: React.FC = () => {
 
         if (response.ok) {
           const updatedProductData = await response.json();
-          setProducts(products.map(p => p.id === updatedProductData.id ? updatedProductData : p));
+          setProducts(products => products.map(p => p.id === updatedProductData.id ? updatedProductData : p));
           setSelectedProduct(updatedProductData);
           setEditingProduct(updatedProductData);
-          toast.success(`${field} mis à jour avec succès`);
+          toast.success(`${field} mis à jour avec succès`, {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
         } else {
           throw new Error('Échec de la mise à jour du produit');
         }
       } catch (error) {
-        toast.error(`Erreur lors de la mise à jour du ${field}`);
+        toast.error(`Erreur lors de la mise à jour du ${field}`, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } finally {
+        setIsProcessing(false);
       }
     }
-  };
+  }, [selectedProduct]);
 
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = useCallback(async () => {
     if (editingProduct) {
+      setIsProcessing(true);
       try {
         const response = await fetch(`/api/products/${editingProduct.id}`, {
           method: 'PUT',
@@ -112,26 +140,94 @@ const ProductList: React.FC = () => {
 
         if (response.ok) {
           const updatedProductData = await response.json();
-          setProducts(products.map(p => p.id === updatedProductData.id ? updatedProductData : p));
+          setProducts(products => products.map(p => p.id === updatedProductData.id ? updatedProductData : p));
           setSelectedProduct(updatedProductData);
           setEditingProduct(null);
-          toast.success('Produit mis à jour avec succès');
+          toast.success('Produit mis à jour avec succès', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
         } else {
           throw new Error('Échec de la mise à jour du produit');
         }
       } catch (error) {
-        toast.error('Erreur lors de la mise à jour du produit');
+        toast.error('Erreur lors de la mise à jour du produit', {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } finally {
+        setIsProcessing(false);
       }
     }
-  };
+  }, [editingProduct]);
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.subCategory.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.agripreneur.farmName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleDeleteClick = useCallback((product: Product) => {
+    setDeletingProduct(product);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (deletingProduct) {
+      setIsProcessing(true);
+      try {
+        const response = await fetch(`/api/products/${deletingProduct.id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          setProducts(products => products.filter(p => p.id !== deletingProduct.id));
+          setDeletingProduct(null);
+          toast.success('Produit supprimé avec succès', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else {
+          throw new Error('Échec de la suppression du produit');
+        }
+      } catch (error) {
+        toast.error('Erreur lors de la suppression du produit', {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    }
+  }, [deletingProduct]);
+
+  const cancelDelete = useCallback(() => {
+    setDeletingProduct(null);
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return products.filter(product =>
+      (product.name?.toLowerCase().includes(searchTermLower) ?? false) ||
+      (product.description?.toLowerCase().includes(searchTermLower) ?? false) ||
+      (product.category?.name?.toLowerCase().includes(searchTermLower) ?? false) ||
+      (product.subCategory?.name?.toLowerCase().includes(searchTermLower) ?? false) ||
+      (product.agripreneur?.farmName?.toLowerCase().includes(searchTermLower) ?? false)
+    );
+  }, [products, searchTerm]);
 
   if (loading) {
     return (
@@ -176,7 +272,7 @@ const ProductList: React.FC = () => {
         
         {showForm && (
           <div className="mb-6 bg-white shadow-md rounded-lg p-6">
-            <ProductForm />
+            <ProductForm onProductAdded={fetchProducts} />
             <button
               onClick={() => setShowForm(false)}
               className="mt-4 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
@@ -214,28 +310,25 @@ const ProductList: React.FC = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                    <div className="text-sm text-gray-500">{product.description}</div>
+                    <div className="text-sm font-medium text-gray-900">{product.name || 'N/A'}</div>
+                    <div className="text-sm text-gray-500">{product.description || 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{product.category.name}</div>
-                    <div className="text-sm text-gray-500">{product.subCategory.name}</div>
+                    <div className="text-sm text-gray-900">{product.category?.name || 'N/A'}</div>
+                    <div className="text-sm text-gray-500">{product.subCategory?.name || 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{product.price} FCFA</div>
+                    <div className="text-sm text-gray-900">{product.price !== undefined ? `${product.price} FCFA` : 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{product.stock}</div>
+                    <div className="text-sm text-gray-900">{product.stock !== undefined ? product.stock : 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{product.agripreneur.firstName} {product.agripreneur.lastName}</div>
-                    <div className="text-sm text-gray-500">{product.agripreneur.farmName}</div>
+                    <div className="text-sm text-gray-900">{product.agripreneur ? `${product.agripreneur.firstName || ''} ${product.agripreneur.lastName || ''}`.trim() || 'N/A' : 'N/A'}</div>
+                    <div className="text-sm text-gray-500">{product.agripreneur?.farmName || 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button onClick={(e) => { e.stopPropagation(); handleEditClick(product); }} className="text-indigo-600 hover:text-indigo-900 mr-4">
-                      <FaEdit className="inline-block mr-1" /> Modifier
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); /* Ajoutez ici la logique de suppression */ }} className="text-red-600 hover:text-red-900">
+                    <button onClick={(e) => { e.stopPropagation(); handleDeleteClick(product); }} className="text-red-600 hover:text-red-900">
                       <FaTrashAlt className="inline-block mr-1" /> Supprimer
                     </button>
                   </td>
@@ -247,15 +340,15 @@ const ProductList: React.FC = () => {
       </div>
 
       {(selectedProduct || editingProduct) && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" onClick={handleCloseProductDetails}>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" onClick={(e) => e.target === e.currentTarget && handleCloseProductDetails()}>
           <div className="relative top-20 mx-auto p-5 border w-3/4 shadow-lg rounded-md bg-white" onClick={e => e.stopPropagation()}>
             <div className="mt-3">
-              <h3 className="text-2xl leading-6 font-bold text-gray-900 mb-4">{editingProduct ? 'Modifier le produit' : 'Détails du produit'}</h3>
+              <h3 className="text-2xl leading-6 font-bold text-gray-900 mb-4">Détails du produit</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <img
-                    src={selectedProduct?.images[0]?.imageUrl || 'placeholder-image-url'}
-                    alt={selectedProduct?.name}
+                    src={selectedProduct?.images?.[0]?.imageUrl || 'placeholder-image-url'}
+                    alt={selectedProduct?.name || 'Product'}
                     className="w-full h-64 object-cover rounded-lg shadow-md"
                   />
                 </div>
@@ -264,20 +357,18 @@ const ProductList: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700">Nom du produit</label>
                     <input
                       type="text"
-                      value={editingProduct?.name || selectedProduct?.name}
-                      onChange={(e) => editingProduct && setEditingProduct({...editingProduct, name: e.target.value})}
+                      value={editingProduct?.name || ''}
+                      onChange={(e) => setEditingProduct(prev => prev ? {...prev, name: e.target.value} : null)}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      readOnly={!editingProduct}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Description</label>
                     <textarea
-                      value={editingProduct?.description || selectedProduct?.description}
-                      onChange={(e) => editingProduct && setEditingProduct({...editingProduct, description: e.target.value})}
+                      value={editingProduct?.description || ''}
+                      onChange={(e) => setEditingProduct(prev => prev ? {...prev, description: e.target.value} : null)}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                       rows={3}
-                      readOnly={!editingProduct}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -285,20 +376,18 @@ const ProductList: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700">Prix (FCFA)</label>
                       <input
                         type="number"
-                        value={editingProduct?.price || selectedProduct?.price}
-                        onChange={(e) => editingProduct && setEditingProduct({...editingProduct, price: parseFloat(e.target.value)})}
+                        value={editingProduct?.price || ''}
+                        onChange={(e) => setEditingProduct(prev => prev ? {...prev, price: parseFloat(e.target.value)} : null)}
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        readOnly={!editingProduct}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Stock</label>
                       <input
                         type="number"
-                        value={editingProduct?.stock || selectedProduct?.stock}
-                        onChange={(e) => editingProduct && setEditingProduct({...editingProduct, stock: parseInt(e.target.value)})}
+                        value={editingProduct?.stock || ''}
+                        onChange={(e) => setEditingProduct(prev => prev ? {...prev, stock: parseInt(e.target.value)} : null)}
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        readOnly={!editingProduct}
                       />
                     </div>
                   </div>
@@ -306,7 +395,7 @@ const ProductList: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700">Catégorie</label>
                     <input
                       type="text"
-                      value={editingProduct?.category.name || selectedProduct?.category.name}
+                      value={editingProduct?.category?.name || 'N/A'}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                       readOnly
                     />
@@ -315,7 +404,7 @@ const ProductList: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700">Sous-catégorie</label>
                     <input
                       type="text"
-                      value={editingProduct?.subCategory.name || selectedProduct?.subCategory.name}
+                      value={editingProduct?.subCategory?.name || 'N/A'}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                       readOnly
                     />
@@ -324,7 +413,7 @@ const ProductList: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700">Agripreneur</label>
                     <input
                       type="text"
-                      value={`${selectedProduct?.agripreneur.firstName} ${selectedProduct?.agripreneur.lastName} - ${selectedProduct?.agripreneur.farmName}`}
+                      value={selectedProduct?.agripreneur ? `${selectedProduct.agripreneur.firstName || ''} ${selectedProduct.agripreneur.lastName || ''} - ${selectedProduct.agripreneur.farmName || ''}`.trim() : 'N/A'}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                       readOnly
                     />
@@ -332,34 +421,49 @@ const ProductList: React.FC = () => {
                 </div>
               </div>
               <div className="mt-6 flex justify-end space-x-3">
-                {editingProduct ? (
-                  <>
-                    <button
-                      onClick={handleSaveEdit}
-                      className="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300"
-                    >
-                      Enregistrer
-                    </button>
-                    <button
-                      onClick={() => setEditingProduct(null)}
-                      className="px-4 py-2 bg-gray-300 text-gray-700 text-base font-medium rounded-md shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                    >
-                      Annuler
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => setEditingProduct(selectedProduct)}
-                    className="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  >
-                    Modifier
-                  </button>
-                )}
+                <button
+                  onClick={handleSaveEdit}
+                  className="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Enregistrement...' : 'Enregistrer'}
+                </button>
                 <button
                   onClick={handleCloseProductDetails}
                   className="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300"
                 >
                   Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deletingProduct && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="delete-modal">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">Confirmer la suppression</h3>
+              <div className="mt-2 px-7 py-3">
+                <p className="text-sm text-gray-500">
+                  Êtes-vous sûr de vouloir supprimer le produit "{deletingProduct.name}" ?
+                </p>
+              </div>
+              <div className="items-center px-4 py-3">
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 mb-2"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Suppression...' : 'Confirmer la suppression'}
+                </button>
+                <button
+                  onClick={cancelDelete}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                  disabled={isProcessing}
+                >
+                  Annuler
                 </button>
               </div>
             </div>

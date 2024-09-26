@@ -3,14 +3,8 @@ import { prisma } from '@/app/lib/prisma';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const productId = parseInt(params.id);
-    
-    if (isNaN(productId)) {
-      return NextResponse.json({ error: 'ID de produit invalide' }, { status: 400 });
-    }
-
     const product = await prisma.product.findUnique({
-      where: { id: productId },
+      where: { id: parseInt(params.id) },
       include: {
         category: true,
         subCategory: true,
@@ -29,8 +23,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     return NextResponse.json(product);
   } catch (error) {
-    console.error('Erreur lors de la récupération du produit:', error);
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+    return handleError(error, 'Erreur lors de la récupération du produit:');
   }
 }
 
@@ -43,16 +36,23 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (!name) {
       return NextResponse.json({ error: 'Le nom du produit est requis' }, { status: 400 });
     }
+
+    // Vérification et conversion de l'ID
+    const productId = parseInt(params.id);
+    if (isNaN(productId)) {
+      return NextResponse.json({ error: 'ID de produit invalide' }, { status: 400 });
+    }
+
     const updatedProduct = await prisma.product.update({
-      where: { id: parseInt(params.id) },
+      where: { id: productId },
       data: { 
         name, 
         description, 
-        price: parseFloat(price), 
-        categoryId, 
-        subCategoryId, 
-        agripreneurId, 
-        stock: parseInt(stock) 
+        price: price != null ? parseFloat(price) : undefined, 
+        categoryId: categoryId != null ? parseInt(categoryId) : undefined, 
+        subCategoryId: subCategoryId != null ? parseInt(subCategoryId) : undefined, 
+        agripreneurId: agripreneurId != null ? parseInt(agripreneurId) : undefined, 
+        stock: stock != null ? parseInt(stock) : undefined 
       },
     });
 
@@ -74,4 +74,8 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     console.error('Erreur lors de la suppression du produit:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
+}
+
+function handleError(error: unknown, arg1: string) {
+  throw new Error('Function not implemented.');
 }
