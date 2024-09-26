@@ -7,6 +7,7 @@ import Baniere from '../components/baniere';
 import ProductListing from '../components/ProductListing';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Loader from '../components/loader';
 
 interface Category {
   id: number;
@@ -26,12 +27,14 @@ const ProductPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchCategories();
   }, [currentPage, selectedCategory, selectedPriceRange]);
 
   const fetchCategories = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch('/api/categories');
       if (!response.ok) {
@@ -47,6 +50,8 @@ const ProductPage = () => {
     } catch (error) {
       console.error("Erreur lors de la récupération des catégories:", error);
       toast.error("Erreur lors de la récupération des catégories");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -142,7 +147,11 @@ const ProductPage = () => {
               </div>
             </div>
             <div className="w-full lg:w-3/4">
-              <ProductListing />
+              {isLoading ? (
+                <Loader />
+              ) : (
+                <ProductListing />
+              )}
             </div>
           </div>
         </div>

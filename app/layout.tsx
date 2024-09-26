@@ -9,6 +9,9 @@ import {
   SignedOut,
   UserButton
 } from '@clerk/nextjs'
+import { PanierProvider } from "./context/PanierContext";
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -44,11 +47,13 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
+      <PanierProvider>
       <html lang="en" className={`${inter.className} ${babylonica.variable} ${montserrat.variable}`}>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           {children}
         </body>
       </html>
+      </PanierProvider>
     </ClerkProvider>
   )
 }

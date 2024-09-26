@@ -6,6 +6,9 @@ import Footer from './components/footer';
 import LandingPage from './landingpage/page';
 import ListUser from './components/ListUser'; // Importer le nouveau composant
 import { useAuth, useUser } from '@clerk/nextjs'; 
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+
 import '@/styles/globals.css';
 
 export default function Home() {

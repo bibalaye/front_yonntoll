@@ -3,34 +3,55 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 
-const BanniereAccueil: React.FC = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [categories, setCategories] = useState<{ category: string; items: { src: string; alt: string; bg: string; height: string; }[]; }[]>([]);
+// Types
+interface Product {
+  id: string;
+  name: string;
+  category: { name: string };
+  images: { imageUrl: string }[];
+}
+
+interface FormattedProduct {
+  src: string;
+  alt: string;
+  bg: string;
+  height: string;
+}
+
+interface Category {
+  category: string;
+  items: FormattedProduct[];
+}
+
+// Hook personnalisé pour la récupération des produits
+const useProducts = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        setIsLoading(true);
         const response = await fetch('/api/products');
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération des produits');
         }
-        const products = await response.json();
+        const products: Product[] = await response.json();
         
-        // Regrouper les produits par catégorie
-        const productsByCategory = products.reduce((acc: { [x: string]: any[]; }, product: { category: { name: string; }; }) => {
+        const productsByCategory = products.reduce((acc, product) => {
           const categoryName = product.category.name.toUpperCase();
           if (!acc[categoryName]) {
             acc[categoryName] = [];
           }
           acc[categoryName].push(product);
           return acc;
-        }, {});
+        }, {} as Record<string, Product[]>);
 
-        // Formater les données pour l'affichage
-        const formattedCategories = Object.entries(productsByCategory).map(([categoryName, categoryProducts]) => {
-          const productImages = (categoryProducts as any[])
-            .filter((product: any) => product.images && product.images.length > 0)
-            .map((product: any) => ({
+        const formattedCategories = Object.entries(productsByCategory).map(([categoryName, categoryProducts]): Category => {
+          const productImages: FormattedProduct[] = categoryProducts
+            .filter(product => product.images && product.images.length > 0)
+            .map(product => ({
               src: product.images[0].imageUrl,
               alt: product.name,
               bg: "bg-pink-900",
@@ -38,7 +59,6 @@ const BanniereAccueil: React.FC = () => {
             }))
             .slice(0, 4);
 
-          // Compléter avec des images par défaut si nécessaire
           while (productImages.length < 4) {
             productImages.push({
               src: "/Rectangle 24.png",
@@ -55,15 +75,28 @@ const BanniereAccueil: React.FC = () => {
         });
 
         setCategories(formattedCategories);
+        setError(null);
       } catch (error) {
         console.error("Erreur lors de la récupération des produits:", error);
+        setError("Impossible de charger les produits. Veuillez réessayer plus tard.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchProducts();
   }, []);
 
+  return { categories, isLoading, error };
+};
+
+const BanniereAccueil: React.FC = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const { categories, isLoading, error } = useProducts();
+
   useEffect(() => {
+    if (categories.length === 0) return;
+
     const nextSlide = () => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % categories.length);
     };
@@ -71,6 +104,9 @@ const BanniereAccueil: React.FC = () => {
     const interval = setInterval(nextSlide, 5000);
     return () => clearInterval(interval);
   }, [categories.length]);
+
+  if (isLoading) return <div>Chargement en cours...</div>;
+  if (error) return <div>Erreur : {error}</div>;
 
   return (
     <div className="relative bg-[#CDEED6] text-white p-4 sm:p-6 md:p-8 rounded-lg overflow-hidden min-h-screen flex items-center bg-[url('/banierre.png')] bg-cover bg-center">

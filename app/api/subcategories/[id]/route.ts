@@ -20,8 +20,20 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const body = await request.json();
-    const { name, categoryId } = body;
+    let name: string;
+    let categoryId: number;
+
+    const contentType = request.headers.get('content-type');
+    if (contentType && contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      name = formData.get('name') as string;
+      categoryId = parseInt(formData.get('categoryId') as string);
+    } else {
+      const body = await request.text();
+      const data = new URLSearchParams(body);
+      name = data.get('name') as string;
+      categoryId = parseInt(data.get('categoryId') as string);
+    }
 
     if (!name || !categoryId) {
       return NextResponse.json({ error: 'Le nom et l\'ID de la catégorie parente sont requis' }, { status: 400 });
@@ -32,10 +44,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       data: { name, categoryId },
     });
 
-    return NextResponse.json(updatedSubCategory);
+    return NextResponse.json(updatedSubCategory, { status: 200 });
   } catch (error) {
     console.error('Erreur lors de la mise à jour de la sous-catégorie:', error);
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+    return NextResponse.json({ error: 'Erreur lors de la mise à jour de la sous-catégorie' }, { status: 500 });
   }
 }
 

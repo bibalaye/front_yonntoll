@@ -17,9 +17,13 @@ interface ProductFormInputs {
   stock: number;
 }
 
+interface ProductFormProps {
+  onProductAdded: () => Promise<void>;
+}
+
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
-const ProductForm: React.FC = () => {
+const ProductForm: React.FC<ProductFormProps> = ({ onProductAdded }) => {
   const { register, handleSubmit, control, watch, formState: { errors }, reset } = useForm<ProductFormInputs>({
     resolver: zodResolver(ProductSchema),
   });

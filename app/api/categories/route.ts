@@ -1,6 +1,46 @@
+import { PrismaClient } from '@prisma/client';
 import { NextResponse } from 'next/server';
-import { prisma } from '@/app/lib/prisma';
 import { v2 as cloudinary } from 'cloudinary';
+import streamifier from 'streamifier';
+
+const prisma = new PrismaClient();
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('_page') || '1');
+    const perPage = parseInt(searchParams.get('_perPage') || '10');
+    const sortField = searchParams.get('_sort') || 'id';
+    const sortOrder = searchParams.get('_order') || 'ASC';
+    const filter = searchParams.get('filter') ? JSON.parse(searchParams.get('filter') || '{}') : {};
+
+    const skip = (page - 1) * perPage;
+
+    const [categories, total] = await Promise.all([
+      prisma.category.findMany({
+        where: filter,
+        skip,
+        take: perPage,
+        orderBy: {
+          [sortField]: sortOrder.toLowerCase(),
+        },
+      }),
+      prisma.category.count({ where: filter }),
+    ]);
+
+    return NextResponse.json(categories, {
+      headers: {
+        'X-Total-Count': total.toString(),
+        'Access-Control-Expose-Headers': 'X-Total-Count',
+      },
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des catégories:', error);
+    return NextResponse.json({ error: 'Erreur lors de la récupération des catégories' }, { status: 500 });
+  }
+}
+
+
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -8,63 +48,44 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-export async function GET() {
-  try {
-    const categories = await prisma.category.findMany(
-      {
-        include: {
-          products: true,
-        },
-      }
-    );
-    return NextResponse.json(categories);
-  } catch (error) {
-    console.error('Erreur lors de la récupération des catégories:', error);
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
-  }
-}
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const formData = await req.formData();
+    const formData = await request.formData();
     const name = formData.get('name') as string;
-    const image = formData.get('image') as File | null;
+    const image = formData.get('image') as File;
 
-    if (!name) {
-      return NextResponse.json({ error: 'Le nom de la catégorie est requis' }, { status: 400 });
+    if (!name || !image) {
+      return NextResponse.json({ error: 'Le nom et l\'image sont requis' }, { status: 400 });
     }
 
-    let imageUrl = null;
-    if (image) {
-      const arrayBuffer = await image.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      
-      const uploadResult = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-          { folder: 'category_images' },
-          (error, result) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(result);
-            }
-          }
-        ).end(buffer);
-      });
+    const buffer = await image.arrayBuffer();
+    const stream = streamifier.createReadStream(Buffer.from(buffer));
 
-      imageUrl = (uploadResult as any).secure_url;
-    }
+    const uploadPromise = new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder: 'categories' },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+
+      stream.pipe(uploadStream);
+    });
+
+    const uploadResult = await uploadPromise as { secure_url: string };
 
     const newCategory = await prisma.category.create({
       data: {
         name,
-        imageUrl,
-      },
+        imageUrl: uploadResult.secure_url
+      }
     });
 
     return NextResponse.json(newCategory, { status: 201 });
   } catch (error) {
     console.error('Erreur lors de la création de la catégorie:', error);
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+    return NextResponse.json({ error: 'Erreur lors de la création de la catégorie' }, { status: 500 });
   }
 }
