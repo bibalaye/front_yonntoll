@@ -59,33 +59,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Le nom et l\'image sont requis' }, { status: 400 });
     }
 
-    const buffer = await image.arrayBuffer();
-    const stream = streamifier.createReadStream(Buffer.from(buffer));
-
-    const uploadPromise = new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
+    const buffer = Buffer.from(await image.arrayBuffer());
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
         { folder: 'categories' },
         (error, result) => {
           if (error) reject(error);
           else resolve(result);
         }
-      );
-
-      stream.pipe(uploadStream);
+      ).end(buffer);
     });
-
-    const uploadResult = await uploadPromise as { secure_url: string };
 
     const newCategory = await prisma.category.create({
       data: {
         name,
-        imageUrl: uploadResult.secure_url
+        imageUrl: (result as any).secure_url
       }
     });
 
     return NextResponse.json(newCategory, { status: 201 });
   } catch (error) {
-    console.error('Erreur lors de la création de la catégorie:', error);
+    console.error('Erreur détaillée lors de la création de la catégorie:', error);
     return NextResponse.json({ error: 'Erreur lors de la création de la catégorie' }, { status: 500 });
   }
 }

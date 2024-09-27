@@ -15,12 +15,16 @@ const baseDataProvider = jsonServerProvider('/api', httpClient);
 const dataProvider = {
   ...baseDataProvider,
   create: (resource: string, params: CreateParams<any>) => {
-    if (resource === 'products' && params.data.images) {
+    if (resource === 'products' || resource === 'categories') {
       const formData = new FormData();
       Object.keys(params.data).forEach(key => {
-        if (key === 'images') {
-          for (let i = 0; i < params.data.images.length; i++) {
-            formData.append('images', params.data.images[i].rawFile);
+        if (key === 'images' || key === 'image') {
+          if (Array.isArray(params.data[key])) {
+            for (let i = 0; i < params.data[key].length; i++) {
+              formData.append(key, params.data[key][i].rawFile);
+            }
+          } else {
+            formData.append(key, params.data[key].rawFile);
           }
         } else {
           formData.append(key, params.data[key]);
@@ -34,18 +38,22 @@ const dataProvider = {
         data: { ...params.data, id: json.id },
       }));
     }
-    // Si ce n'est pas un produit ou s'il n'y a pas d'images, utilisez le dataProvider par défaut
+    // Si ce n'est pas un produit ou une catégorie, utilisez le dataProvider par défaut
     return baseDataProvider.create(resource, params);
   },
   update: (resource: string, params: UpdateParams<any>) => {
-    if (resource === 'products' && params.data.images) {
+    if (resource === 'products' || resource === 'categories') {
       const formData = new FormData();
       Object.keys(params.data).forEach(key => {
-        if (key === 'images') {
-          for (let i = 0; i < params.data.images.length; i++) {
-            if (params.data.images[i].rawFile) {
-              formData.append('images', params.data.images[i].rawFile);
+        if (key === 'images' || key === 'image') {
+          if (Array.isArray(params.data[key])) {
+            for (let i = 0; i < params.data[key].length; i++) {
+              if (params.data[key][i].rawFile) {
+                formData.append(key, params.data[key][i].rawFile);
+              }
             }
+          } else if (params.data[key].rawFile) {
+            formData.append(key, params.data[key].rawFile);
           }
         } else {
           formData.append(key, params.data[key]);
@@ -59,7 +67,7 @@ const dataProvider = {
         data: json,
       }));
     } else {
-      // Si ce n'est pas un produit ou s'il n'y a pas de nouvelles images, utilisez le dataProvider par défaut
+      // Si ce n'est pas un produit ou une catégorie, utilisez le dataProvider par défaut
       return baseDataProvider.update(resource, params);
     }
   },

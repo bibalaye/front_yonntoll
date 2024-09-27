@@ -154,7 +154,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
             {/* Détails du produit */}
             <div className="w-full md:w-3/5 px-4">
               <h1 className="text-3xl font-bold mb-2 text-gray-800">{product.name}</h1>
-              <p className="text-sm text-gray-500 mb-4">SKU: {product.id}</p>
+              <p className="text-sm text-gray-500 mb-4">Identifiant: {product.id}</p>
               <div className="flex items-center mb-4">
                 {[...Array(5)].map((_, i) => (
                   <FaStar key={i} className="text-yellow-400 mr-1" />
@@ -242,7 +242,8 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           <div className="mt-12">
             <h3 className="text-2xl font-bold mb-4 text-gray-800">Produits similaires</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {similarProducts.map((similarProduct) => (
+              {similarProducts.filter(similarProduct => similarProduct.id !== product.id).map((similarProduct) => (
+                <a href={`/produits/${similarProduct.id}`} key={similarProduct.id}>
                 <div key={similarProduct.id} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300">
                   <Image
                     src={similarProduct.images && similarProduct.images.length > 0 ? similarProduct.images[0].imageUrl : "/placeholder-image.jpg"}
@@ -254,6 +255,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                   <h4 className="text-lg font-semibold mb-2 text-gray-800 truncate">{similarProduct.name}</h4>
                   <p className="text-green-600 font-bold">{similarProduct.price.toLocaleString()} XOF</p>
                 </div>
+                </a>
               ))}
             </div>
           </div>

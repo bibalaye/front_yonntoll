@@ -52,7 +52,7 @@ const ProductCarousel: React.FC<{ products: Product[] }> = ({ products }) => {
         {products.slice(currentIndex, currentIndex + (windowWidth < 640 ? 1 : windowWidth < 1024 ? 2 : 3)).map((product, index) => (
           <div key={index} className="w-full xs:w-3/4 sm:w-1/2 lg:w-1/3 h-auto p-2 mx-auto">
             <div className="transform transition-all duration-300 hover:scale-105">
-              <ProductCard product={product} />
+              <ProductCard product={product} isInCarousel={true} />
             </div>
           </div>
         ))}

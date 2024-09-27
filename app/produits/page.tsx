@@ -23,15 +23,21 @@ interface SubCategory {
 const ProductPage = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [selectedPriceRange, setSelectedPriceRange] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [products, setProducts] = useState([]);
 
   useEffect(() => {
     fetchCategories();
-  }, [currentPage, selectedCategory, selectedPriceRange]);
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [currentPage, selectedCategory, selectedSubCategory, selectedPriceRange]);
 
   const fetchCategories = async () => {
     setIsLoading(true);
@@ -55,16 +61,47 @@ const ProductPage = () => {
     }
   };
 
-  const handleCategoryClick = (categoryId: number) => {
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      let url = `/api/products?page=${currentPage}`;
+      if (selectedCategory) {
+        url += `&category=${selectedCategory}`;
+      }
+      if (selectedSubCategory) {
+        url += `&subCategory=${selectedSubCategory}`;
+      }
+      if (selectedPriceRange) {
+        url += `&priceRange=${selectedPriceRange}`;
+      }
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des produits');
+      }
+      const data = await response.json();
+      setProducts(data.products);
+      setTotalPages(data.totalPages);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des produits:", error);
+      toast.error("Erreur lors de la récupération des produits");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCategoryClick = (categoryId: number, categoryName: string) => {
     setExpandedCategories(prev => 
       prev.includes(categoryId) 
         ? prev.filter(id => id !== categoryId) 
         : [...prev, categoryId]
     );
+    setSelectedCategory(prevCategory => prevCategory === categoryName ? '' : categoryName);
+    setSelectedSubCategory('');
+    setCurrentPage(1);
   };
 
   const handleSubCategoryClick = (subCategoryName: string) => {
-    setSelectedCategory(prevCategory => prevCategory === subCategoryName ? '' : subCategoryName);
+    setSelectedSubCategory(prevSubCategory => prevSubCategory === subCategoryName ? '' : subCategoryName);
     setCurrentPage(1);
   };
 
@@ -92,8 +129,8 @@ const ProductPage = () => {
                 {categories.map((category) => (
                   <div key={category.id} className="w-full px-2 mb-4">
                     <button 
-                      className={`text-left w-full font-montserrat text-sm sm:text-base text-[#08651E] hover:text-[#08651E] transition duration-300`}
-                      onClick={() => handleCategoryClick(category.id)}
+                      className={`text-left w-full font-montserrat text-sm sm:text-base ${selectedCategory === category.name ? 'text-[#08651E] font-bold' : 'text-[#08651E]'} hover:text-[#08651E] transition duration-300`}
+                      onClick={() => handleCategoryClick(category.id, category.name)}
                     >
                       <span className="inline-block w-4">{expandedCategories.includes(category.id) ? '▼' : '▶'}</span>
                       <span className="align-middle">{category.name}</span>
@@ -104,7 +141,7 @@ const ProductPage = () => {
                           category.subCategories.map((subCategory) => (
                             <button
                               key={subCategory.id}
-                              className={`block w-full text-left font-montserrat text-sm ${selectedCategory === subCategory.name ? 'text-[#08651E] font-bold' : 'text-gray-600'} hover:text-[#08651E] transition duration-300 mb-1`}
+                              className={`block w-full text-left font-montserrat text-sm ${selectedSubCategory === subCategory.name ? 'text-[#08651E] font-bold' : 'text-gray-600'} hover:text-[#08651E] transition duration-300 mb-1`}
                               onClick={() => handleSubCategoryClick(subCategory.name)}
                             >
                               {subCategory.name}
@@ -150,7 +187,7 @@ const ProductPage = () => {
               {isLoading ? (
                 <Loader />
               ) : (
-                <ProductListing />
+                <ProductListing products={products} />
               )}
             </div>
           </div>

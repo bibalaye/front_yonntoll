@@ -61,7 +61,7 @@ const ProductListing: React.FC = () => {
     <div className="relative w-full mx-auto h-auto bg-[#CDEED6] p-4 sm:p-6 md:p-8 rounded-3xl">
       {typeof window !== 'undefined' && (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
             {optimizedCurrentProducts.map((product, index) => (
               <ProductCard key={index} product={product} />
             ))}
