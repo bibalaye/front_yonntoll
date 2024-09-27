@@ -50,8 +50,8 @@ const ProductCarousel: React.FC<{ products: Product[] }> = ({ products }) => {
     <div className="relative mx-2 sm:mx-4 md:mx-6 lg:mx-10 min-h-[400px] sm:min-h-[450px] md:min-h-[500px] lg:min-h-[550px] bg-[#CDEED6] p-4 sm:p-6 md:p-8 rounded-3xl">
       <div className="flex flex-col sm:flex-row justify-center items-center w-full h-full space-y-4 sm:space-y-0 sm:space-x-2 md:space-x-4 pb-4">
         {products.slice(currentIndex, currentIndex + (windowWidth < 640 ? 1 : windowWidth < 1024 ? 2 : 3)).map((product, index) => (
-          <div key={index} className="w-full xs:w-3/4 sm:w-1/2 lg:w-1/3 h-auto p-2 mx-auto">
-            <div className="transform transition-all duration-300 hover:scale-105">
+          <div key={index} className="w-full xs:w-3/4 sm:w-1/2 lg:w-1/3 h-auto p-2 mx-auto flex justify-center">
+            <div className="transform transition-all duration-300 hover:scale-105 w-full max-w-sm">
               <ProductCard product={product} isInCarousel={true} />
             </div>
           </div>

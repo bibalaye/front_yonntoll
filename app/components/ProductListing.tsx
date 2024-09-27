@@ -58,10 +58,10 @@ const ProductListing: React.FC = () => {
   }, [products, currentPage]);
 
   return (
-    <div className="relative w-full mx-auto h-auto bg-[#CDEED6] p-4 sm:p-6 md:p-8 rounded-3xl">
+    <div className="relative w-full mx-auto  h-auto bg-[#CDEED6] p-2 sm:p-4 md:p-6 rounded-3xl">
       {typeof window !== 'undefined' && (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-2 md:gap-3">
             {optimizedCurrentProducts.map((product, index) => (
               <ProductCard key={index} product={product} />
             ))}
